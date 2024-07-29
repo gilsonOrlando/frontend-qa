@@ -45,6 +45,7 @@ const Pruebas: React.FC = () => {
     };
 
     const handleSubmit = () => {
+        console.log(id)
         switch (selectedOption) {
             case 'allSubcaracteristicas':
                 console.log('Realizar pruebas en todas las subcaracterísticas');
@@ -53,22 +54,26 @@ const Pruebas: React.FC = () => {
             case 'singleSubcaracteristica':
                 console.log('Realizar pruebas en la subcaracterística:', selectedSubcaracteristica);
                 if (selectedSubcaracteristica) {
-                    navigate(`/subcategoriesresponses/${selectedSubcaracteristica}`);
+                    navigate(`/subcategoryresponse/${selectedSubcaracteristica}/${id}`);
                 }
                 break;
             case 'allMetricas':
                 console.log('Realizar pruebas en todas las métricas');
-                // Aquí podrías redirigir si lo deseas
+                navigate(`/metricsresponse/${id}`)
                 break;
             case 'singleMetrica':
                 console.log('Realizar pruebas en la métrica:', selectedMetrica);
                 if (selectedMetrica) {
-                    navigate(`/subcategoriesresponses/${selectedMetrica}`);
+                    navigate(`/metricaresponse/${selectedMetrica}/${id}`);
                 }
                 break;
             default:
                 console.log('Seleccione una opción válida');
         }
+    };
+
+    const handleViewResponses = () => {
+        navigate(`/projectresponses/${id}`);
     };
 
     return (
@@ -123,12 +128,21 @@ const Pruebas: React.FC = () => {
                         </select>
                     </div>
                 )}
+                 <div className="flex justify-between">
                 <button
                     onClick={handleSubmit}
                     className="px-4 py-2 bg-blue-950 text-white rounded"
                 >
                     Realizar Pruebas
                 </button>
+                <button
+                        onClick={handleViewResponses}
+                        className="px-4 py-2 bg-green-600 text-white rounded"
+                    >
+                        Ver Respuestas
+                    </button>
+                </div>
+                
             </div>
         </div>
     );

@@ -30,21 +30,21 @@ interface Subcaracteristica {
   metricas: Metrica[];
 }
 
-const SubcategoriesResponses: React.FC = () => {
-  const { id: proyectoId } = useParams<{ id: string }>();
-  const [subcaracteristicas, setSubcaracteristicas] = useState<Subcaracteristica[]>([]);
+const SubcategoryResponse: React.FC = () => {
+  const [subcaracteristica, setSubcaracteristica] = useState<Subcaracteristica | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [respuestas, setRespuestas] = useState<{ [key: string]: number | null }>({});
   const [nombreRespuesta, setNombreRespuesta] = useState<string>(''); // Nuevo estado para el nombre de la respuesta
   const navigate = useNavigate();
+  const { id: subcaracteristicaId, id2: proyectoId } = useParams<{ id: string; id2: string }>();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await api.get<Subcaracteristica[]>('/subcaracteristicas/all');
+        const response = await api.get<Subcaracteristica>(`/subcaracteristicas/one/${subcaracteristicaId}`);
         console.log('Datos recibidos:', response.data);
-        setSubcaracteristicas(response.data);
+        setSubcaracteristica(response.data);
       } catch (err) {
         console.error('Error al obtener los datos:', err);
         setError('Error al obtener los datos');
@@ -54,7 +54,7 @@ const SubcategoriesResponses: React.FC = () => {
     };
 
     fetchData();
-  }, []);
+  }, [subcaracteristicaId]);
 
   const handleSelectChange = (pautaId: string, listaVerificacionId: string, valor: number) => {
     setRespuestas(prevRespuestas => ({
@@ -64,19 +64,19 @@ const SubcategoriesResponses: React.FC = () => {
   };
 
   const handleSubmit = async () => {
-    console.log(proyectoId, "proyectoid")
     const formattedRespuestas = Object.keys(respuestas).map(key => {
       const [pautaId, listaVerificacionId] = key.split('-');
       return {
         pautaId,
         listaVerificacion: listaVerificacionId,
-        valor: respuestas[key]
+        valor: respuestas[key],
       };
     });
 
     const data = {
       proyectoId,
-      tipo: 'allSubcaracteristicas',
+      tipo: 'singleSubcaracteristica',
+      subcaracteristicaId,
       respuestas: formattedRespuestas,
       nombre: nombreRespuesta // Enviar el nombre de la respuesta
     };
@@ -94,8 +94,6 @@ const SubcategoriesResponses: React.FC = () => {
   if (loading) return <p className="text-center text-gray-500">Loading...</p>;
   if (error) return <p className="text-center text-red-500">{error}</p>;
 
-  console.log('Datos en el estado:', subcaracteristicas);
-
   return (
     <div className="max-w-4xl mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4 text-gray-800">Cuestionario</h1>
@@ -108,54 +106,52 @@ const SubcategoriesResponses: React.FC = () => {
           className="w-full p-2 border border-gray-300 rounded bg-white text-black"
         />
       </div>
-      {subcaracteristicas.length > 0 ? (
-        subcaracteristicas.map((subcaracteristica) => (
-          <div key={subcaracteristica._id} className="mb-6">
-            <h2 className="text-xl font-semibold mb-2 text-gray-700">{subcaracteristica.nombre}</h2>
-            {subcaracteristica.metricas.length > 0 ? (
-              subcaracteristica.metricas.map((metrica) => (
-                <div key={metrica._id} className="mb-4">
-                  <h3 className="text-lg font-medium mb-1 text-gray-600">{metrica.nombre}</h3>
-                  <div className="p-4 bg-gray-100 rounded-lg shadow-sm">
-                    <h4 className="text-md font-medium mb-2 text-gray-500">{metrica.listaVerificacion.nombre}</h4>
-                    {metrica.listaVerificacion.pautas.length > 0 ? (
-                      metrica.listaVerificacion.pautas.map((pauta) => (
-                        <div key={pauta._id} className="mb-4">
-                          <h5 className="text-md font-normal mb-1 text-gray-600">{pauta.pregunta}</h5>
-                          <ul className="list-disc pl-5">
-                            {pauta.nivelesCumplimiento.length > 0 ? (
-                              pauta.nivelesCumplimiento.map((nivel) => (
-                                <li key={nivel.descripcion} className="mb-1">
-                                  <label className="flex items-center text-gray-700">
-                                    <input
-                                      type="checkbox"
-                                      name={`${pauta._id}-${metrica.listaVerificacion._id}`}
-                                      value={nivel.valor}
-                                      checked={respuestas[`${pauta._id}-${metrica.listaVerificacion._id}`] === nivel.valor}
-                                      onChange={() => handleSelectChange(pauta._id, metrica.listaVerificacion._id, nivel.valor)}
-                                      className="mr-2"
-                                    />
-                                    {nivel.descripcion} - Valor: {nivel.valor}
-                                  </label>
-                                </li>
-                              ))
-                            ) : (
-                              <li className="text-gray-500">No hay niveles de cumplimiento</li>
-                            )}
-                          </ul>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-gray-500">No hay pautas</p>
-                    )}
-                  </div>
+      {subcaracteristica ? (
+        <div key={subcaracteristica._id} className="mb-6">
+          <h2 className="text-xl font-semibold mb-2 text-gray-700">{subcaracteristica.nombre}</h2>
+          {subcaracteristica.metricas.length > 0 ? (
+            subcaracteristica.metricas.map((metrica) => (
+              <div key={metrica._id} className="mb-4">
+                <h3 className="text-lg font-medium mb-1 text-gray-600">{metrica.nombre}</h3>
+                <div className="p-4 bg-gray-100 rounded-lg shadow-sm">
+                  <h4 className="text-md font-medium mb-2 text-gray-500">{metrica.listaVerificacion.nombre}</h4>
+                  {metrica.listaVerificacion.pautas.length > 0 ? (
+                    metrica.listaVerificacion.pautas.map((pauta) => (
+                      <div key={pauta._id} className="mb-4">
+                        <h5 className="text-md font-normal mb-1 text-gray-600">{pauta.pregunta}</h5>
+                        <ul className="list-disc pl-5">
+                          {pauta.nivelesCumplimiento.length > 0 ? (
+                            pauta.nivelesCumplimiento.map((nivel) => (
+                              <li key={nivel.descripcion} className="mb-1">
+                                <label className="flex items-center text-gray-700">
+                                  <input
+                                    type="checkbox"
+                                    name={`${pauta._id}-${metrica.listaVerificacion._id}`}
+                                    value={nivel.valor}
+                                    checked={respuestas[`${pauta._id}-${metrica.listaVerificacion._id}`] === nivel.valor}
+                                    onChange={() => handleSelectChange(pauta._id, metrica.listaVerificacion._id, nivel.valor)}
+                                    className="mr-2"
+                                  />
+                                  {nivel.descripcion} - Valor: {nivel.valor}
+                                </label>
+                              </li>
+                            ))
+                          ) : (
+                            <li className="text-gray-500">No hay niveles de cumplimiento</li>
+                          )}
+                        </ul>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-gray-500">No hay pautas</p>
+                  )}
                 </div>
-              ))
-            ) : (
-              <p className="text-gray-500">No hay métricas</p>
-            )}
-          </div>
-        ))
+              </div>
+            ))
+          ) : (
+            <p className="text-gray-500">No hay métricas</p>
+          )}
+        </div>
       ) : (
         <p className="text-center text-gray-500">No se encontraron subcaracterísticas.</p>
       )}
@@ -169,4 +165,4 @@ const SubcategoriesResponses: React.FC = () => {
   );
 };
 
-export default SubcategoriesResponses;
+export default SubcategoryResponse;

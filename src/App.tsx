@@ -25,10 +25,17 @@ import ProyectoForm from './components/ProyectoForm';
 import ProyectoList from './components/ProyectoList';
 import Pruebas from './components/Pruebas';
 import SubcategoriesResponses from './components/SubcategoriesResponses';
+import SubcategoryResponse from './components/SubcategoryResponse';
+import MetricsResponse from './components/MetricasResponses';
+import MetricaResponse from './components/MetricaReponse';
+import ProjectResponses from './components/ProjectResponses';
+import Calculos from './components/Calculos';
+import Navbar from './components/Navbar';
 
 const App: React.FC = () => {
     return (
         <div className="App">
+            <Navbar/>
             <Routes>
                 <Route
                     path='/crear_pauta'
@@ -130,6 +137,38 @@ const App: React.FC = () => {
                     element={
                         <SubcategoriesResponses />
                     }
+                />
+                <Route
+                    path="/subcategoryresponse/:id/:id2"
+                    element={
+                        <SubcategoryResponse />
+                    }
+                />
+                <Route
+                    path="/metricsresponse/:id"
+                    element={
+                        <MetricsResponse />
+                    }
+                />
+                <Route
+                    path="/metricaresponse/:id/:id2"
+                    element={
+                        <MetricaResponse />
+                    }
+                />
+                <Route 
+                    path="/projectresponses/:id" 
+                    element={
+                        <ProjectResponses 
+                        />
+                    } 
+                />
+                 <Route 
+                    path="/calculos/:id" 
+                    element={
+                        <Calculos 
+                        />
+                    } 
                 />
             </Routes>
 
