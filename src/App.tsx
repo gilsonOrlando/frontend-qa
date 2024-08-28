@@ -31,12 +31,19 @@ import MetricaResponse from './components/MetricaReponse';
 import ProjectResponses from './components/ProjectResponses';
 import Calculos from './components/Calculos';
 import Navbar from './components/Navbar';
+import Home from './components/Home';
 
 const App: React.FC = () => {
     return (
         <div className="App">
             <Navbar/>
             <Routes>
+                <Route
+                    path='/'
+                    element={
+                        <Home/>
+                    }
+                />
                 <Route
                     path='/crear_pauta'
                     element={

@@ -25,14 +25,18 @@ interface Metrica {
   listaVerificacion: ListaVerificacion;
 }
 
+const ITEMS_PER_PAGE = 10; // Número de pautas por página
+
 const MetricaResponse: React.FC = () => {
   const [metrica, setMetrica] = useState<Metrica | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [respuestas, setRespuestas] = useState<{ [key: string]: number | null }>({});
-  const [nombreRespuesta, setNombreRespuesta] = useState<string>(''); // Nuevo estado para el nombre de la respuesta
-  const navigate = useNavigate(); // Hook de navegación
-  const { id: metricaId, id2: proyectoId } = useParams<{ id: string, id2: string }>(); // Hook para obtener parámetros de la URL
+  const [comentarios, setComentarios] = useState<{ [key: string]: string }>({});
+  const [nombreRespuesta, setNombreRespuesta] = useState<string>('');
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const navigate = useNavigate();
+  const { id: metricaId, id2: proyectoId } = useParams<{ id: string, id2: string }>();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -58,6 +62,13 @@ const MetricaResponse: React.FC = () => {
     }));
   };
 
+  const handleCommentChange = (pautaId: string, listaVerificacionId: string, comentario: string) => {
+    setComentarios(prevComentarios => ({
+      ...prevComentarios,
+      [`${pautaId}-${listaVerificacionId}`]: comentario,
+    }));
+  };
+
   const handleSubmit = async () => {
     const formattedRespuestas = Object.keys(respuestas).map(key => {
       const [pautaId, listaVerificacionId] = key.split('-');
@@ -65,6 +76,7 @@ const MetricaResponse: React.FC = () => {
         pautaId,
         listaVerificacion: listaVerificacionId,
         valor: respuestas[key],
+        comentario: comentarios[key] || '',  // Agregar comentario aquí
       };
     });
 
@@ -73,7 +85,7 @@ const MetricaResponse: React.FC = () => {
       tipo: 'singleMetrica',
       metricaId,
       respuestas: formattedRespuestas,
-      nombre: nombreRespuesta // Enviar el nombre de la respuesta
+      nombre: nombreRespuesta 
     };
 
     try {
@@ -85,6 +97,18 @@ const MetricaResponse: React.FC = () => {
       alert('Hubo un error al guardar las respuestas');
     }
   };
+
+  // Aplanar las pautas para la paginación
+  const allPautas = metrica ? metrica.listaVerificacion.pautas : [];
+  
+  // Paginación de pautas
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedPautas = allPautas.slice(startIndex, endIndex);
+  
+  const totalPages = Math.ceil(allPautas.length / ITEMS_PER_PAGE);
+  const hasNextPage = currentPage < totalPages;
+  const hasPrevPage = currentPage > 1;
 
   if (loading) return <p className="text-center text-gray-500">Loading...</p>;
   if (error) return <p className="text-center text-red-500">{error}</p>;
@@ -107,8 +131,8 @@ const MetricaResponse: React.FC = () => {
         <h2 className="text-xl font-semibold mb-2 text-gray-700">{metrica.nombre}</h2>
         <div className="p-4 bg-gray-100 rounded-lg shadow-sm">
           <h3 className="text-md font-medium mb-2 text-gray-500">{metrica.listaVerificacion.nombre}</h3>
-          {metrica.listaVerificacion.pautas.length > 0 ? (
-            metrica.listaVerificacion.pautas.map((pauta) => (
+          {paginatedPautas.length > 0 ? (
+            paginatedPautas.map((pauta) => (
               <div key={pauta._id} className="mb-4">
                 <h4 className="text-md font-normal mb-1 text-gray-600">{pauta.pregunta}</h4>
                 <ul className="list-disc pl-5">
@@ -132,6 +156,16 @@ const MetricaResponse: React.FC = () => {
                     <li className="text-gray-500">No hay niveles de cumplimiento</li>
                   )}
                 </ul>
+                {/* Campo de texto para comentarios */}
+                <div className="mt-2">
+                  <label className="block text-gray-700 font-medium">Comentarios:</label>
+                  <textarea
+                    value={comentarios[`${pauta._id}-${metrica.listaVerificacion._id}`] || ''}
+                    onChange={(e) => handleCommentChange(pauta._id, metrica.listaVerificacion._id, e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded bg-white text-black"
+                    rows={3}
+                  />
+                </div>
               </div>
             ))
           ) : (
@@ -139,9 +173,29 @@ const MetricaResponse: React.FC = () => {
           )}
         </div>
       </div>
+      <div className="flex justify-between items-center mt-4">
+        <button
+          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+          disabled={!hasPrevPage}
+          className={`px-4 py-2 ${!hasPrevPage ? 'bg-gray-300 text-gray-700' : 'bg-gray-500 text-white'} rounded-lg shadow-md hover:${!hasPrevPage ? 'bg-gray-400' : 'bg-gray-600'} focus:outline-none focus:ring-2 focus:ring-gray-300`}
+        >
+          Anterior
+        </button>
+        <span className="text-gray-700">
+          Página {currentPage} de {totalPages}
+        </span>
+        <button
+          onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+          disabled={!hasNextPage}
+          className={`px-4 py-2 ${!hasNextPage ? 'bg-gray-300 text-gray-700' : 'bg-gray-500 text-white'} rounded-lg shadow-md hover:${!hasNextPage ? 'bg-gray-400' : 'bg-gray-600'} focus:outline-none focus:ring-2 focus:ring-gray-300`}
+        >
+          Siguiente
+        </button>
+      </div>
       <button
         onClick={handleSubmit}
-        className="px-4 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+        disabled={!nombreRespuesta}
+        className={`px-4 py-2 ${!nombreRespuesta ? 'bg-gray-300 text-gray-700' : 'bg-blue-500 text-white'} rounded-lg shadow-md hover:${!nombreRespuesta ? 'bg-gray-400' : 'bg-blue-600'} focus:outline-none focus:ring-2 focus:ring-blue-400 mt-4`}
       >
         Guardar respuestas
       </button>

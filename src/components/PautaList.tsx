@@ -69,10 +69,10 @@ const PautaList: React.FC = () => {
                         <li key={pauta._id} className="bg-white p-4 shadow-sm rounded border border-gray-200">
                             <h3 className="text-xl font-semibold text-blue-950">{pauta.descripcion}</h3>
                             <p className="text-gray-700">{pauta.pregunta}</p>
-                            <ul className="mt-2 space-y-1">
+                            <ul className="list-disc list-inside ml-4 mb-4">
                                 {pauta.nivelesCumplimiento.map((nivel, index) => (
                                     <li key={index} className="text-gray-600">
-                                        {nivel.descripcion}: {nivel.valor}
+                                        {nivel.descripcion} Valor: {nivel.valor}
                                     </li>
                                 ))}
                             </ul>
