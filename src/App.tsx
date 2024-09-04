@@ -32,6 +32,8 @@ import ProjectResponses from './components/ProjectResponses';
 import Calculos from './components/Calculos';
 import Navbar from './components/Navbar';
 import Home from './components/Home';
+import SelectSubcaracteristicas from './components/SelectSubcaracteristicas';
+import SelectMetricas from './components/SelectMetricas';
 
 const App: React.FC = () => {
     return (
@@ -146,7 +148,7 @@ const App: React.FC = () => {
                     }
                 />
                 <Route
-                    path="/subcategoryresponse/:id/:id2"
+                    path="/subcategoryresponse/:id/:id2/:id3"
                     element={
                         <SubcategoryResponse />
                     }
@@ -158,7 +160,7 @@ const App: React.FC = () => {
                     }
                 />
                 <Route
-                    path="/metricaresponse/:id/:id2"
+                    path="/metricaresponse/:id/:id2/:id3"
                     element={
                         <MetricaResponse />
                     }
@@ -174,6 +176,20 @@ const App: React.FC = () => {
                     path="/calculos/:id" 
                     element={
                         <Calculos 
+                        />
+                    } 
+                />
+                 <Route 
+                    path="/select-subcaracteristicas/:id/:id2" 
+                    element={
+                        <SelectSubcaracteristicas
+                        />
+                    } 
+                />
+                 <Route 
+                    path="/select-metricas/:id/:id2" 
+                    element={
+                        <SelectMetricas
                         />
                     } 
                 />

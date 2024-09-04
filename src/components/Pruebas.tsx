@@ -68,7 +68,7 @@ const Pruebas: React.FC = () => {
             case 'singleSubcaracteristica':
                 console.log('Realizar pruebas en la subcaracterística:', selectedSubcaracteristica);
                 if (selectedSubcaracteristica) {
-                    navigate(`/subcategoryresponse/${selectedSubcaracteristica}/${id}`);
+                    navigate(`/subcategoryresponse/${selectedSubcaracteristica}/${id}/1`);
                 }
                 break;
             case 'allMetricas':
@@ -78,7 +78,7 @@ const Pruebas: React.FC = () => {
             case 'singleMetrica':
                 console.log('Realizar pruebas en la métrica:', selectedMetrica);
                 if (selectedMetrica) {
-                    navigate(`/metricaresponse/${selectedMetrica}/${id}`);
+                    navigate(`/metricaresponse/${selectedMetrica}/${id}/1`);
                 }
                 break;
             default:

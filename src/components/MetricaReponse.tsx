@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import api from '../api';
-import { useParams, useNavigate } from 'react-router-dom';
 
-// Define las interfaces para los datos
 interface Pauta {
   _id: string;
   descripcion: string;
@@ -25,27 +24,51 @@ interface Metrica {
   listaVerificacion: ListaVerificacion;
 }
 
-const ITEMS_PER_PAGE = 10; // Número de pautas por página
+const ITEMS_PER_PAGE = 10;
 
 const MetricaResponse: React.FC = () => {
   const [metrica, setMetrica] = useState<Metrica | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [respuestas, setRespuestas] = useState<{ [key: string]: number | null }>({});
-  const [comentarios, setComentarios] = useState<{ [key: string]: string }>({});
+  const [respuestas, setRespuestas] = useState<{ [key: string]: { valor: number | null; comentario: string } }>({});
   const [nombreRespuesta, setNombreRespuesta] = useState<string>('');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const navigate = useNavigate();
-  const { id: metricaId, id2: proyectoId } = useParams<{ id: string, id2: string }>();
+  const { id: metricaId, id2: proyectoId, id3: intentosId } = useParams<{ id: string; id2: string; id3: string }>();
+  const location = useLocation();
+  const additionalMetricas = location.state?.additionalMetricas || [];
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await api.get<Metrica>(`/metricas/one/${metricaId}`);
-        console.log('Datos recibidos:', response.data);
-        setMetrica(response.data);
+        const metricaIds = [metricaId, ...additionalMetricas].join(',');
+        const [metricasResponse] = await Promise.all([
+          api.get<Metrica[]>(`/metricas/one/${metricaIds}`)
+        ]);
+
+        const metricas = metricasResponse.data;
+        setMetrica(metricas[0]); // Seteamos solo la primera para iniciar, puedes cambiar esto para manejar múltiples métricas
+
+        if (intentosId === '2') {
+          // Cargar respuestas solo si es el primer intento
+          const respuestasResponse = await api.get(`/respuestas/${proyectoId}`);
+          const respuesta = respuestasResponse.data.find(
+            (r: any) => r.metricaId === metricaId && r.tipo === 'singleMetrica'
+          );
+
+          if (respuesta) {
+            const respuestasMap = respuesta.respuestas.reduce((acc: any, resp: any) => {
+              acc[`${resp.pautaId}-${resp.listaVerificacion}`] = {
+                valor: resp.valor ?? null,
+                comentario: resp.comentario ?? ''
+              };
+              return acc;
+            }, {});
+            setRespuestas(respuestasMap);
+            setNombreRespuesta(respuesta.nombre);
+          }
+        }
       } catch (err) {
-        console.error('Error al obtener los datos:', err);
         setError('Error al obtener los datos');
       } finally {
         setLoading(false);
@@ -53,30 +76,40 @@ const MetricaResponse: React.FC = () => {
     };
 
     fetchData();
-  }, [metricaId]);
+  }, [metricaId, proyectoId, additionalMetricas, intentosId]);
 
   const handleSelectChange = (pautaId: string, listaVerificacionId: string, valor: number) => {
     setRespuestas(prevRespuestas => ({
       ...prevRespuestas,
-      [`${pautaId}-${listaVerificacionId}`]: prevRespuestas[`${pautaId}-${listaVerificacionId}`] === valor ? null : valor,
+      [`${pautaId}-${listaVerificacionId}`]: {
+        ...prevRespuestas[`${pautaId}-${listaVerificacionId}`],
+        valor: prevRespuestas[`${pautaId}-${listaVerificacionId}`]?.valor === valor ? null : valor,
+      },
     }));
   };
 
   const handleCommentChange = (pautaId: string, listaVerificacionId: string, comentario: string) => {
-    setComentarios(prevComentarios => ({
-      ...prevComentarios,
-      [`${pautaId}-${listaVerificacionId}`]: comentario,
+    setRespuestas(prevRespuestas => ({
+      ...prevRespuestas,
+      [`${pautaId}-${listaVerificacionId}`]: {
+        ...prevRespuestas[`${pautaId}-${listaVerificacionId}`],
+        comentario,
+      },
     }));
   };
 
   const handleSubmit = async () => {
+    if (!intentosId) {
+      alert('El número de intentos no está definido.');
+      return;
+    }
     const formattedRespuestas = Object.keys(respuestas).map(key => {
       const [pautaId, listaVerificacionId] = key.split('-');
       return {
         pautaId,
         listaVerificacion: listaVerificacionId,
-        valor: respuestas[key],
-        comentario: comentarios[key] || '',  // Agregar comentario aquí
+        valor: respuestas[key].valor,
+        comentario: respuestas[key].comentario || '',
       };
     });
 
@@ -85,7 +118,8 @@ const MetricaResponse: React.FC = () => {
       tipo: 'singleMetrica',
       metricaId,
       respuestas: formattedRespuestas,
-      nombre: nombreRespuesta 
+      nombre: nombreRespuesta,
+      intentos: parseInt(intentosId, 10)
     };
 
     try {
@@ -93,27 +127,22 @@ const MetricaResponse: React.FC = () => {
       alert('Respuestas guardadas exitosamente');
       navigate(`/pruebas/${proyectoId}`);
     } catch (error) {
-      console.error('Error al guardar las respuestas:', error);
       alert('Hubo un error al guardar las respuestas');
     }
   };
 
-  // Aplanar las pautas para la paginación
   const allPautas = metrica ? metrica.listaVerificacion.pautas : [];
-  
-  // Paginación de pautas
+
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
   const paginatedPautas = allPautas.slice(startIndex, endIndex);
-  
+
   const totalPages = Math.ceil(allPautas.length / ITEMS_PER_PAGE);
   const hasNextPage = currentPage < totalPages;
   const hasPrevPage = currentPage > 1;
 
   if (loading) return <p className="text-center text-gray-500">Loading...</p>;
   if (error) return <p className="text-center text-red-500">{error}</p>;
-
-  if (!metrica) return <p className="text-center text-gray-500">No se encontró la métrica.</p>;
 
   return (
     <div className="max-w-4xl mx-auto p-4">
@@ -127,24 +156,24 @@ const MetricaResponse: React.FC = () => {
           className="w-full p-2 border border-gray-300 rounded bg-white text-black"
         />
       </div>
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-2 text-gray-700">{metrica.nombre}</h2>
-        <div className="p-4 bg-gray-100 rounded-lg shadow-sm">
-          <h3 className="text-md font-medium mb-2 text-gray-500">{metrica.listaVerificacion.nombre}</h3>
-          {paginatedPautas.length > 0 ? (
-            paginatedPautas.map((pauta) => (
-              <div key={pauta._id} className="mb-4">
+      {metrica ? (
+        <>
+          {paginatedPautas.map((pauta) => (
+            <div key={pauta._id} className="mb-6">
+              <h2 className="text-xl font-semibold mb-2 text-gray-700">{metrica.nombre}</h2>
+              <div className="p-4 bg-gray-100 rounded-lg shadow-sm">
+                <h3 className="text-md font-medium mb-2 text-gray-500">{metrica.listaVerificacion.nombre}</h3>
                 <h4 className="text-md font-normal mb-1 text-gray-600">{pauta.pregunta}</h4>
                 <ul className="list-disc pl-5">
                   {pauta.nivelesCumplimiento.length > 0 ? (
-                    pauta.nivelesCumplimiento.map((nivel) => (
+                    pauta.nivelesCumplimiento.map(nivel => (
                       <li key={nivel.descripcion} className="mb-1">
                         <label className="flex items-center text-gray-700">
                           <input
                             type="checkbox"
                             name={`${pauta._id}-${metrica.listaVerificacion._id}`}
                             value={nivel.valor}
-                            checked={respuestas[`${pauta._id}-${metrica.listaVerificacion._id}`] === nivel.valor}
+                            checked={respuestas[`${pauta._id}-${metrica.listaVerificacion._id}`]?.valor === nivel.valor}
                             onChange={() => handleSelectChange(pauta._id, metrica.listaVerificacion._id, nivel.valor)}
                             className="mr-2"
                           />
@@ -156,23 +185,21 @@ const MetricaResponse: React.FC = () => {
                     <li className="text-gray-500">No hay niveles de cumplimiento</li>
                   )}
                 </ul>
-                {/* Campo de texto para comentarios */}
-                <div className="mt-2">
-                  <label className="block text-gray-700 font-medium">Comentarios:</label>
-                  <textarea
-                    value={comentarios[`${pauta._id}-${metrica.listaVerificacion._id}`] || ''}
-                    onChange={(e) => handleCommentChange(pauta._id, metrica.listaVerificacion._id, e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded bg-white text-black"
-                    rows={3}
-                  />
-                </div>
+                <textarea
+                  placeholder="Agregar comentario"
+                  value={respuestas[`${pauta._id}-${metrica.listaVerificacion._id}`]?.comentario || ''}
+                  onChange={(e) =>
+                    handleCommentChange(pauta._id, metrica.listaVerificacion._id, e.target.value)
+                  }
+                  className="w-full p-2 border bg-white text-black border-gray-300 rounded mt-2"
+                />
               </div>
-            ))
-          ) : (
-            <p className="text-gray-500">No hay pautas</p>
-          )}
-        </div>
-      </div>
+            </div>
+          ))}
+        </>
+      ) : (
+        <p className="text-center text-gray-500">No se encontró la métrica.</p>
+      )}
       <div className="flex justify-between items-center mt-4">
         <button
           onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}

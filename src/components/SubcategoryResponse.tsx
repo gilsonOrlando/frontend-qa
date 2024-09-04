@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import api from '../api';
 
 interface Pauta {
@@ -40,13 +40,37 @@ const SubcategoryResponse: React.FC = () => {
   const [nombreRespuesta, setNombreRespuesta] = useState<string>('');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const navigate = useNavigate();
-  const { id: subcaracteristicaId, id2: proyectoId } = useParams<{ id: string; id2: string }>();
+  const { id: subcaracteristicaId, id2: proyectoId, id3: intentosId } = useParams<{ id: string; id2: string; id3: string }>();
+  const location = useLocation();
+  const additionalSubcaracteristicas = location.state?.additionalSubcaracteristicas || [];
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await api.get<Subcaracteristica>(`/subcaracteristicas/one/${subcaracteristicaId}`);
-        setSubcaracteristica(response.data);
+        const subcaracteristicaIds = [subcaracteristicaId, ...additionalSubcaracteristicas].join(',');
+        const response = await api.get<Subcaracteristica[]>(`/subcaracteristicas/one/${subcaracteristicaIds}`);
+
+        const subcaracteristicas = response.data;
+        setSubcaracteristica(subcaracteristicas[0]); // Setear solo la primera para iniciar
+
+        if (intentosId === '2') {
+          const respuestasResponse = await api.get(`/respuestas/${proyectoId}`);
+          const respuesta = respuestasResponse.data.find(
+            (r: any) => r.subcaracteristicaId === subcaracteristicaId && r.tipo === 'singleSubcaracteristica'
+          );
+
+          if (respuesta) {
+            const respuestasMap = respuesta.respuestas.reduce((acc: any, resp: any) => {
+              acc[`${resp.pautaId}-${resp.listaVerificacion}`] = {
+                valor: resp.valor ?? null,
+                comentario: resp.comentario ?? ''
+              };
+              return acc;
+            }, {});
+            setRespuestas(respuestasMap);
+            setNombreRespuesta(respuesta.nombre);
+          }
+        }
       } catch (err) {
         setError('Error al obtener los datos');
       } finally {
@@ -55,7 +79,8 @@ const SubcategoryResponse: React.FC = () => {
     };
 
     fetchData();
-  }, [subcaracteristicaId]);
+  }, [subcaracteristicaId, proyectoId, additionalSubcaracteristicas, intentosId]);
+
 
   const handleSelectChange = (pautaId: string, listaVerificacionId: string, valor: number) => {
     setRespuestas(prevRespuestas => ({
@@ -78,6 +103,10 @@ const SubcategoryResponse: React.FC = () => {
   };
 
   const handleSubmit = async () => {
+    if (!intentosId) {
+      alert('El número de intentos no está definido.');
+      return;
+    }
     const formattedRespuestas = Object.keys(respuestas).map(key => {
       const [pautaId, listaVerificacionId] = key.split('-');
       return {
@@ -94,6 +123,7 @@ const SubcategoryResponse: React.FC = () => {
       subcaracteristicaId,
       respuestas: formattedRespuestas,
       nombre: nombreRespuesta,
+      intentos: parseInt(intentosId, 10)
     };
 
     try {
@@ -105,7 +135,6 @@ const SubcategoryResponse: React.FC = () => {
     }
   };
 
-  // Aplanar las pautas y dividirlas en páginas
   const allPautas = subcaracteristica ? subcaracteristica.metricas.flatMap(metrica =>
     metrica.listaVerificacion.pautas
   ) : [];
