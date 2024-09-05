@@ -7,8 +7,8 @@ interface Respuesta {
     nombre: string;
     intentos: number;
     tipo: string;
-    subcaracteristicaId?: string;
-    metricaId?: string;
+    subcaracteristicaId?: string;  // Puede ser undefined
+    metricaId?: string;  // Puede ser undefined
     respuestas: {
         pautaId?: string;
         listaVerificacion?: string;
@@ -43,32 +43,40 @@ const ProjectResponses: React.FC = () => {
         fetchData();
     }, [id]);
 
-    const handleReattempt = (itemId: string, tipo: string) => {
+    const handleReattempt = (respuestaId: string, tipo: string) => {
         setShowAdditionalQuestion(true);
-        // Guardar el ID del ítem actual y su tipo en el estado
-        setSelectedItem({ id: itemId, tipo });
+        setSelectedItem({ id: respuestaId, tipo });
     };
 
     const handleAdditionalQuestionResponse = (response: string) => {
         setShowAdditionalQuestion(false);
-    
+
+        if (!selectedItem) return;
+
+        // Encuentra la respuesta seleccionada
+        const selectedRespuesta = respuestas.find(r => r._id === selectedItem.id);
+
+        if (!selectedRespuesta) return;
+
+        // Obtener subcaracteristicaId o metricaId según el tipo
+        const { subcaracteristicaId, metricaId } = selectedRespuesta;
+
         if (response === 'sí') {
-            if (selectedItem?.tipo === 'singleSubcaracteristica') {
-                navigate(`/select-subcaracteristicas/${selectedItem.id}/${id}`);
-            } else if (selectedItem?.tipo === 'singleMetrica') {
-                navigate(`/select-metricas/${selectedItem.id}/${id}`);
+            // Redireccionar para seleccionar una nueva subcaracterística o métrica
+            if (selectedItem.tipo === 'singleSubcaracteristica' && subcaracteristicaId) {
+                navigate(`/select-subcaracteristicas/${subcaracteristicaId}/${id}`);
+            } else if (selectedItem.tipo === 'singleMetrica' && metricaId) {
+                navigate(`/select-metricas/${metricaId}/${id}`);
             }
         } else {
-            if (selectedItem?.tipo === 'singleSubcaracteristica') {
-                navigate(`/subcategoryresponse/${selectedItem.id}/${id}/2`, {
-                    state: { additionalSubcaracteristicas: [] } // Estado inicial vacío
-                });
-            } else if (selectedItem?.tipo === 'singleMetrica') {
-                navigate(`/metricaresponse/${selectedItem.id}/${id}/2`);
+            // Redireccionar a la prueba correspondiente usando subcaracteristicaId o metricaId
+            if (selectedItem.tipo === 'singleSubcaracteristica' && subcaracteristicaId) {
+                navigate(`/subcategoryresponse/${subcaracteristicaId}/${id}/2`);
+            } else if (selectedItem.tipo === 'singleMetrica' && metricaId) {
+                navigate(`/metricaresponse/${metricaId}/${id}/2`);
             }
         }
     };
-    
 
     if (loading) return <p className="text-center text-gray-500">Loading...</p>;
     if (error) return <p className="text-center text-red-500">{error}</p>;
@@ -86,7 +94,7 @@ const ProjectResponses: React.FC = () => {
                         <div className="flex space-x-4">
                             {(respuesta.intentos < 2 && (respuesta.tipo === 'singleSubcaracteristica' || respuesta.tipo === 'singleMetrica')) && (
                                 <button
-                                    onClick={() => handleReattempt(respuesta.subcaracteristicaId || respuesta.metricaId || '', respuesta.tipo)}
+                                    onClick={() => handleReattempt(respuesta._id, respuesta.tipo)}
                                     className="px-3 py-2 bg-green-600 text-white text-sm font-semibold rounded-md shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
                                 >
                                     Realizar la prueba de nuevo
@@ -104,7 +112,7 @@ const ProjectResponses: React.FC = () => {
             </ul>
             {showAdditionalQuestion && (
                 <div className="mt-6">
-                    <p className="text-lg font-semibold mb-2">¿Deseas agregar otra {selectedItem?.tipo === 'subcaracteristica' ? 'subcaracterística' : 'métrica'}?</p>
+                    <p className="text-lg text-black font-semibold mb-2">¿Deseas agregar otra {selectedItem?.tipo === 'singleSubcaracteristica' ? 'subcaracterística' : 'métrica'}?</p>
                     <button
                         onClick={() => handleAdditionalQuestionResponse('sí')}
                         className="px-4 py-2 bg-blue-500 text-white rounded-md shadow-md hover:bg-blue-600"

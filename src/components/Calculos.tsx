@@ -9,9 +9,15 @@ import api from '../api';
 // Registrar los componentes necesarios de Chart.js
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
+interface Comentario {
+    pregunta: string;
+    comentario: string;
+}
+
 interface Calculo {
     nombre: string;
     promedio: number;
+    comentarios: Comentario[];
 }
 
 const Calculos: React.FC = () => {
@@ -40,46 +46,89 @@ const Calculos: React.FC = () => {
     const generarPDF = useCallback(() => {
         const doc = new jsPDF();
         const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
         const marginLeft = 15;
-
+        const marginRight = 15;
+        let finalY = 20; // Variable para controlar la posición vertical
+    
         doc.setFontSize(18);
-        doc.text('Reporte de Cálculos del Proyecto', pageWidth / 2, 20, { align: 'center' });
-
+        doc.text('Reporte de Cálculos del Proyecto', pageWidth / 2, finalY, { align: 'center' });
+        finalY += 10;
+    
+        // Agregar gráfico si existe
         if (chartRef.current) {
             const chartCanvas = chartRef.current.canvas as HTMLCanvasElement;
             const chartImage = chartCanvas.toDataURL('image/png');
-            doc.addImage(chartImage, 'PNG', 15, 30, pageWidth - 30, 60);
+            doc.addImage(chartImage, 'PNG', marginLeft, finalY, pageWidth - marginLeft - marginRight, 60);
+            finalY += 70; // Espacio después del gráfico
         }
-
+    
         doc.setFontSize(14);
-        doc.text('Resumen de Cálculos', marginLeft, 100);
-
+        doc.text('Resumen de Cálculos', marginLeft, finalY);
+        finalY += 10;
+    
+        // Crear la tabla de resumen de cálculos
         const tableColumn = ['Nombre', 'Promedio (%)'];
         const tableRows: (string | number)[][] = [];
-
+    
         calculos.forEach(calculo => {
             const calculoData = [calculo.nombre, `${(calculo.promedio * 100).toFixed(2)}%`];
             tableRows.push(calculoData);
         });
-
+    
         (doc as any).autoTable({
             head: [tableColumn],
             body: tableRows,
-            startY: 110,
+            startY: finalY,
             margin: { left: marginLeft, right: marginLeft },
             styles: { overflow: 'linebreak', fontSize: 12 },
         });
-
-        const finalY = (doc as any).lastAutoTable.finalY + 10;
-
+    
+        finalY = (doc as any).lastAutoTable.finalY + 10; // Posición después de la tabla
+    
         doc.setFontSize(12);
         doc.text('Detalles de los cálculos:', marginLeft, finalY);
-        const text = `Este reporte muestra los cálculos realizados para el proyecto, detallando los promedios obtenidos para cada categoría evaluada. El gráfico al inicio del documento proporciona una representación visual clara de los resultados. 
-Cada promedio se muestra como un porcentaje para facilitar la comprensión de los datos.`;
-        doc.text(text, marginLeft, finalY + 10, { maxWidth: pageWidth - 2 * marginLeft });
-
+        finalY += 10;
+    
+        // Tabla para mostrar los comentarios y descripciones de las pautas
+        const comentarioRows: any[] = [];
+    
+        calculos.forEach(calculo => {
+            calculo.comentarios.forEach(comentario => {
+                const pregunta = comentario.pregunta;
+                const comentarioTexto = comentario.comentario ? comentario.comentario : 'Sin comentario';
+    
+                // Agregar cada fila con la pauta y el comentario
+                comentarioRows.push({
+                    nombre: calculo.nombre,
+                    pregunta: pregunta,
+                    comentario: comentarioTexto,
+                });
+            });
+        });
+    
+        // Definir las columnas y generar la tabla
+        (doc as any).autoTable({
+            head: [['Nombre', 'Pregunta', 'Comentario']],
+            body: comentarioRows.map(row => [
+                row.nombre,
+                row.pregunta,
+                row.comentario,
+            ]),
+            startY: finalY,
+            margin: { left: marginLeft, right: marginLeft },
+            styles: { fontSize: 12, cellWidth: 'wrap' },
+            columnStyles: {
+                0: { cellWidth: 50 },  // Columna Nombre
+                1: { cellWidth: 60 },  // Columna Pauta Descripción
+                2: { cellWidth: 80 },  // Columna Comentario
+            },
+        });
+    
         doc.save('calculos.pdf');
     }, [calculos]);
+    
+    
 
     if (loading) return <p className="text-center text-gray-500">Cargando...</p>;
     if (error) return <p className="text-center text-red-500">{error}</p>;

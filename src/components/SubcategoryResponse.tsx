@@ -48,7 +48,9 @@ const SubcategoryResponse: React.FC = () => {
     const fetchData = async () => {
       try {
         const subcaracteristicaIds = [subcaracteristicaId, ...additionalSubcaracteristicas].join(',');
-        const response = await api.get<Subcaracteristica[]>(`/subcaracteristicas/one/${subcaracteristicaIds}`);
+        const [response] = await Promise.all([
+          api.get<Subcaracteristica[]>(`/subcaracteristicas/one/${subcaracteristicaIds}`)
+        ]);
 
         const subcaracteristicas = response.data;
         setSubcaracteristica(subcaracteristicas[0]); // Setear solo la primera para iniciar

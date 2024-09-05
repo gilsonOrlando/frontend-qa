@@ -18,6 +18,7 @@ const Pruebas: React.FC = () => {
     const [selectedOption, setSelectedOption] = useState<string>('');
     const [selectedSubcaracteristica, setSelectedSubcaracteristica] = useState<string>('');
     const [selectedMetrica, setSelectedMetrica] = useState<string>('');
+    const [error, setError] = useState<string | null>(null); // Para mostrar errores
     const navigate = useNavigate();
     const { id } = useParams();
 
@@ -42,52 +43,64 @@ const Pruebas: React.FC = () => {
         setSelectedOption(e.target.value);
         setSelectedSubcaracteristica('');
         setSelectedMetrica('');
+        setError(null); // Limpiar error al cambiar la opción
     };
 
-    const isSubmitDisabled = () => {
-        if (!selectedOption) return true;
-
-        if (selectedOption === 'singleSubcaracteristica' && !selectedSubcaracteristica) {
-            return true;
+    const checkExistence = async (type: 'subcaracteristica' | 'metrica', idToCheck: string) => {
+        try {
+            const endpoint = type === 'subcaracteristica' ? '/respuestas/subcaracteristica' : '/respuestas/metrica';
+            const response = await api.post(endpoint, { proyectoId: id, [type + 'Id']: idToCheck });
+            return response.data.existe;
+        } catch (error) {
+            console.error('Error al verificar existencia:', error);
+            return false;
         }
-
-        if (selectedOption === 'singleMetrica' && !selectedMetrica) {
-            return true;
-        }
-
-        return false;
     };
 
-    const handleSubmit = () => {
-        console.log(id);
-        switch (selectedOption) {
-            case 'allSubcaracteristicas':
-                console.log('Realizar pruebas en todas las subcaracterísticas');
-                navigate(`/subcategoriesresponses/${id}`);
-                break;
-            case 'singleSubcaracteristica':
-                console.log('Realizar pruebas en la subcaracterística:', selectedSubcaracteristica);
-                if (selectedSubcaracteristica) {
-                    navigate(`/subcategoryresponse/${selectedSubcaracteristica}/${id}/1`);
-                }
-                break;
-            case 'allMetricas':
-                console.log('Realizar pruebas en todas las métricas');
-                navigate(`/metricsresponse/${id}`);
-                break;
-            case 'singleMetrica':
-                console.log('Realizar pruebas en la métrica:', selectedMetrica);
-                if (selectedMetrica) {
-                    navigate(`/metricaresponse/${selectedMetrica}/${id}/1`);
-                }
-                break;
-            default:
-                console.log('Seleccione una opción válida');
+    const handleSubmit = async () => {
+        if (selectedOption === 'singleSubcaracteristica') {
+            const exists = await checkExistence('subcaracteristica', selectedSubcaracteristica);
+            if (exists) {
+                setError('Ya existe una respuesta para esta subcaracterística');
+                return;
+            }
+            navigate(`/subcategoryresponse/${selectedSubcaracteristica}/${id}/1`);
+        } else if (selectedOption === 'singleMetrica') {
+            const exists = await checkExistence('metrica', selectedMetrica);
+            if (exists) {
+                setError('Ya existe una respuesta para esta métrica');
+                return;
+            }
+            navigate(`/metricaresponse/${selectedMetrica}/${id}/1`);
+        } else if (selectedOption === 'allSubcaracteristicas') {
+            navigate(`/subcategoriesresponses/${id}`);
+        } else if (selectedOption === 'allMetricas') {
+            navigate(`/metricsresponse/${id}`);
+        } else {
+            console.log('Seleccione una opción válida');
         }
     };
 
     const handleViewResponses = () => {
         navigate(`/projectresponses/${id}`);
+    };
+
+    const isSubmitDisabled = () => {
+        // Verificar si no se ha seleccionado ninguna opción
+        if (!selectedOption) return true;
+
+        // Verificar si se seleccionó singleSubcaracteristica pero no se ha seleccionado ninguna subcaracterística
+        if (selectedOption === 'singleSubcaracteristica' && !selectedSubcaracteristica) {
+            return true;
+        }
+
+        // Verificar si se seleccionó singleMetrica pero no se ha seleccionado ninguna métrica
+        if (selectedOption === 'singleMetrica' && !selectedMetrica) {
+            return true;
+        }
+
+        // En cualquier otro caso, no deshabilitar el botón
+        return false;
     };
 
     return (
@@ -161,6 +174,7 @@ const Pruebas: React.FC = () => {
                         >
                             Realizar Pruebas
                         </button>
+                        {error && <p className="text-red-500 text-center mb-4">{error}</p>}
                         <button
                             onClick={handleViewResponses}
                             className="w-full px-4 py-2 bg-green-600 text-white rounded"
