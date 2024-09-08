@@ -49,6 +49,7 @@ const ProyectoList: React.FC = () => {
                                 <Link to={`/editar_proyecto/${proyecto._id}`} className="px-4 py-2 bg-yellow-500 text-white rounded">Editar</Link>
                                 <button onClick={() => handleDelete(proyecto._id)} className="px-4 py-2 bg-red-600 text-white rounded">Eliminar</button>
                                 <Link to={`/pruebas/${proyecto._id}`} className="px-4 py-2 bg-green-500 text-white rounded">Pruebas</Link>
+                                <Link to={`/sonarqube/${proyecto._id}`} className="px-4 py-2 bg-blue-500 text-white rounded">Análisis SonarQube</Link>
                             </div>
                         </li>
                     ))}

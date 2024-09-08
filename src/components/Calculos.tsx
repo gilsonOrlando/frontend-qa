@@ -72,7 +72,7 @@ const Calculos: React.FC = () => {
         const tableRows: (string | number)[][] = [];
     
         calculos.forEach(calculo => {
-            const calculoData = [calculo.nombre, `${(calculo.promedio * 100).toFixed(2)}%`];
+            const calculoData = [calculo.nombre, `${(calculo.promedio * 100).toFixed(2)} /100% `];
             tableRows.push(calculoData);
         });
     

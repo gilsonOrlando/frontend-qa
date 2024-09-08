@@ -34,6 +34,7 @@ import Navbar from './components/Navbar';
 import Home from './components/Home';
 import SelectSubcaracteristicas from './components/SelectSubcaracteristicas';
 import SelectMetricas from './components/SelectMetricas';
+import SonarQube from './components/SonarQube';
 
 const App: React.FC = () => {
     return (
@@ -190,6 +191,13 @@ const App: React.FC = () => {
                     path="/select-metricas/:id/:id2" 
                     element={
                         <SelectMetricas
+                        />
+                    } 
+                />
+                <Route 
+                    path="/sonarqube/:id" 
+                    element={
+                        <SonarQube
                         />
                     } 
                 />
