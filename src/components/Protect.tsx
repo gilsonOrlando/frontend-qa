@@ -1,6 +1,6 @@
 const Protect = () => {
     return (
-        <div>
+        <div className="text-black">
             Ruta protegida
         </div>
     )

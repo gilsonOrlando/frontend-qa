@@ -1,6 +1,6 @@
 const Public = () => {
     return (
-        <div>
+        <div className="text-black">
             Ruta publica
         </div>
     )

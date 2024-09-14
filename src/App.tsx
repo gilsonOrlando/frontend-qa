@@ -1,18 +1,12 @@
-/*import Protect from "./components/Protect"
-import Public from "./components/Public"
-import useAuth from "./hooks/useAuth"
-
-function App() {
-  const isLogin = useAuth();
-  return isLogin ? <Protect /> : <Public />;
-}
-
-export default App
-*/
-
 
 import React from 'react';
 import { Routes, Route } from "react-router-dom";
+import Navbar from './components/Navbar';
+import Home from './components/Home';
+import useAuth from './hooks/useAuth';
+import ProtectedRoute from './components/ProtectedRoute';
+
+// Importa tus componentes
 import PautaForm from './components/PautaForm';
 import PautaList from './components/PautaList';
 import ListaVerificacionForm from './components/ListaVerificacionForm';
@@ -30,181 +24,185 @@ import MetricsResponse from './components/MetricasResponses';
 import MetricaResponse from './components/MetricaReponse';
 import ProjectResponses from './components/ProjectResponses';
 import Calculos from './components/Calculos';
-import Navbar from './components/Navbar';
-import Home from './components/Home';
 import SelectSubcaracteristicas from './components/SelectSubcaracteristicas';
 import SelectMetricas from './components/SelectMetricas';
 import SonarQube from './components/SonarQube';
 
 const App: React.FC = () => {
-    return (
-        <div className="App">
-            <Navbar/>
-            <Routes>
-                <Route
-                    path='/'
-                    element={
-                        <Home/>
-                    }
-                />
-                <Route
-                    path='/crear_pauta'
-                    element={
-                        <PautaForm />
-                    }
-                />
-                <Route
-                    path='lista_pauta'
-                    element={
-                        <PautaList />
-                    }
-                />
-                <Route
-                    path="/editar_pauta/:id"
-                    element={
-                        <PautaForm />
-                    }
-                />
-                <Route
-                    path="/lista_verificacion"
-                    element={
-                        <ListaVerificacionList />
-                    }
-                />
-                <Route
-                    path="/crear_listaVerificacion"
-                    element={
-                        <ListaVerificacionForm />
-                    }
-                />
-                <Route
-                    path="/editar_listaVerificacion/:id"
-                    element={
-                        <ListaVerificacionForm />
-                    }
-                />
-                <Route
-                    path="/lista_metrica"
-                    element={
-                        <MetricaList />
-                    }
-                />
-                <Route
-                    path="/crear_metrica"
-                    element={
-                        <MetricaForm />
-                    }
-                />
-                <Route
-                    path="/editar_metrica/:id"
-                    element={
-                        <MetricaForm />
-                    }
-                />
-                <Route
-                    path="/lista_subcaracteristicas"
-                    element={
-                        <SubcaracteristicaList />
-                    }
-                />
-                <Route
-                    path="/crear_subcaracteristica"
-                    element={
-                        <SubcaracteristicaForm />
-                    }
-                />
-                <Route
-                    path="/editar_subcaracteristica/:id"
-                    element={
-                        <SubcaracteristicaForm />
-                    }
-                />
-                <Route path="/lista_proyectos"
-                    element={
-                        <ProyectoList />
-                    }
-                />
-                <Route
-                    path="/crear_proyecto"
-                    element={
-                        <ProyectoForm />
-                    }
-                />
-                <Route
-                    path="/editar_proyecto/:id"
-                    element={
-                        <ProyectoForm />
-                    }
-                />
-                <Route
-                    path="/pruebas/:id"
-                    element={
-                        <Pruebas />
-                    }
-                />
-                <Route
-                    path="/subcategoriesresponses/:id"
-                    element={
-                        <SubcategoriesResponses />
-                    }
-                />
-                <Route
-                    path="/subcategoryresponse/:id/:id2/:id3"
-                    element={
-                        <SubcategoryResponse />
-                    }
-                />
-                <Route
-                    path="/metricsresponse/:id"
-                    element={
-                        <MetricsResponse />
-                    }
-                />
-                <Route
-                    path="/metricaresponse/:id/:id2/:id3"
-                    element={
-                        <MetricaResponse />
-                    }
-                />
-                <Route 
-                    path="/projectresponses/:id" 
-                    element={
-                        <ProjectResponses 
-                        />
-                    } 
-                />
-                 <Route 
-                    path="/calculos/:id" 
-                    element={
-                        <Calculos 
-                        />
-                    } 
-                />
-                 <Route 
-                    path="/select-subcaracteristicas/:id/:id2" 
-                    element={
-                        <SelectSubcaracteristicas
-                        />
-                    } 
-                />
-                 <Route 
-                    path="/select-metricas/:id/:id2" 
-                    element={
-                        <SelectMetricas
-                        />
-                    } 
-                />
-                <Route 
-                    path="/sonarqube/:id" 
-                    element={
-                        <SonarQube
-                        />
-                    } 
-                />
-            </Routes>
+  const { isLogin, userId, roles, logout } = useAuth();
 
-        </div>
-    );
+  return (
+    <div className="App">
+      <Navbar isLogin={isLogin} onLogout={logout} />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        
+        {/* Rutas para estudiantes */}
+        <Route 
+          path="/crear_proyecto"
+          element={
+            <ProtectedRoute isLogin={isLogin} allowedRoles={['estudiante','admin']} userRoles={roles}>
+              <ProyectoForm idpersona={userId || ''} />
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/lista_proyectos"
+          element={
+            <ProtectedRoute isLogin={isLogin} allowedRoles={['estudiante','admin']} userRoles={roles}>
+              <ProyectoList idpersona={userId || ''} />
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/pruebas/:id"
+          element={
+            <ProtectedRoute isLogin={isLogin} allowedRoles={['estudiante','admin']} userRoles={roles}>
+              <Pruebas />
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/subcategoriesresponses/:id"
+          element={
+            <ProtectedRoute isLogin={isLogin} allowedRoles={['estudiante','admin']} userRoles={roles}>
+              <SubcategoriesResponses />
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/subcategoryresponse/:id/:id2/:id3"
+          element={
+            <ProtectedRoute isLogin={isLogin} allowedRoles={['estudiante','admin']} userRoles={roles}>
+              <SubcategoryResponse />
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/metricsresponse/:id"
+          element={
+            <ProtectedRoute isLogin={isLogin} allowedRoles={['estudiante','admin']} userRoles={roles}>
+              <MetricsResponse />
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/metricaresponse/:id/:id2/:id3"
+          element={
+            <ProtectedRoute isLogin={isLogin} allowedRoles={['estudiante','admin']} userRoles={roles}>
+              <MetricaResponse />
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/projectresponses/:id"
+          element={
+            <ProtectedRoute isLogin={isLogin} allowedRoles={['estudiante','admin']} userRoles={roles}>
+              <ProjectResponses />
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/calculos/:id"
+          element={
+            <ProtectedRoute isLogin={isLogin} allowedRoles={['estudiante','admin']} userRoles={roles}>
+              <Calculos />
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/select-subcaracteristicas/:id/:id2"
+          element={
+            <ProtectedRoute isLogin={isLogin} allowedRoles={['estudiante','admin']} userRoles={roles}>
+              <SelectSubcaracteristicas />
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/select-metricas/:id/:id2"
+          element={
+            <ProtectedRoute isLogin={isLogin} allowedRoles={['estudiante','admin']} userRoles={roles}>
+              <SelectMetricas />
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/sonarqube/:id"
+          element={
+            <ProtectedRoute isLogin={isLogin} allowedRoles={['estudiante','admin']} userRoles={roles}>
+              <SonarQube />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Rutas para admin y estudiantes */}
+        <Route 
+          path="/crear_pauta"
+          element={
+            <ProtectedRoute isLogin={isLogin} allowedRoles={['admin']} userRoles={roles}>
+              <PautaForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/lista_pauta"
+          element={
+            <ProtectedRoute isLogin={isLogin} allowedRoles={['admin']} userRoles={roles}>
+              <PautaList />
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/crear_listaVerificacion"
+          element={
+            <ProtectedRoute isLogin={isLogin} allowedRoles={['admin']} userRoles={roles}>
+              <ListaVerificacionForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/lista_verificacion"
+          element={
+            <ProtectedRoute isLogin={isLogin} allowedRoles={['admin']} userRoles={roles}>
+              <ListaVerificacionList />
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/crear_metrica"
+          element={
+            <ProtectedRoute isLogin={isLogin} allowedRoles={['admin']} userRoles={roles}>
+              <MetricaForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/lista_metrica"
+          element={
+            <ProtectedRoute isLogin={isLogin} allowedRoles={['admin']} userRoles={roles}>
+              <MetricaList />
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/crear_subcaracteristica"
+          element={
+            <ProtectedRoute isLogin={isLogin} allowedRoles={['admin']} userRoles={roles}>
+              <SubcaracteristicaForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/lista_subcaracteristicas"
+          element={
+            <ProtectedRoute isLogin={isLogin} allowedRoles={['admin']} userRoles={roles}>
+              <SubcaracteristicaList />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </div>
+  );
 };
 
 export default App;

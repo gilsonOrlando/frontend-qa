@@ -6,15 +6,20 @@ interface Proyecto {
     _id: string;
     nombre: string;
     link: string;
+    idPersona: string;
 }
 
-const ProyectoList: React.FC = () => {
+interface ProyectoListProps {
+    idpersona: string; // Añade esta prop para que el componente pueda recibir idpersona
+}
+
+const ProyectoList: React.FC<ProyectoListProps> = ({ idpersona }) => {
     const [proyectos, setProyectos] = useState<Proyecto[]>([]);
 
     useEffect(() => {
         const fetchProyectos = async () => {
             try {
-                const response = await api.get('/proyectos');
+                const response = await api.get(`/proyectos/persona/${idpersona}`);
                 setProyectos(response.data);
             } catch (error) {
                 console.error('Error al obtener proyectos:', error);
@@ -22,7 +27,7 @@ const ProyectoList: React.FC = () => {
         };
 
         fetchProyectos();
-    }, []);
+    }, [idpersona]);
 
     const handleDelete = async (id: string) => {
         try {
