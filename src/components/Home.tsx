@@ -36,12 +36,19 @@ const Home = () => {
             <footer className="bg-white py-8 shadow-inner">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-around items-center">
-                        <img src={Institution1} alt="Institution 1" className="h-16" />
-                        <img src={Institution2} alt="Institution 2" className="h-16" />
-                        <img src={Institution3} alt="Institution 3" className="h-16" />
+                    <a href="https://www.unl.edu.ec/" target="_blank" rel="noopener noreferrer">
+                            <img src={Institution1} alt="Institution 1" className="h-16 cursor-pointer" />
+                        </a>
+                        <a href="https://computacion.unl.edu.ec/" target="_blank" rel="noopener noreferrer">
+                            <img src={Institution2} alt="Institution 2" className="h-16 cursor-pointer" />
+                        </a>
+                        <a href="" rel="noopener noreferrer">
+                            <img src={Institution3} alt="Institution 3" className="h-16 cursor-pointer" />
+                        </a>
                     </div>
                 </div>
             </footer>
+
         </div>
     );
 };
