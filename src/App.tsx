@@ -27,6 +27,7 @@ import Calculos from './components/Calculos';
 import SelectSubcaracteristicas from './components/SelectSubcaracteristicas';
 import SelectMetricas from './components/SelectMetricas';
 import SonarQube from './components/SonarQube';
+import SonarQubeInstructions from './components/SonarQubeInstructions';
 
 const App: React.FC = () => {
   const { isLogin, userId, roles, logout } = useAuth();
@@ -40,6 +41,14 @@ const App: React.FC = () => {
         {/* Rutas para estudiantes */}
         <Route 
           path="/crear_proyecto"
+          element={
+            <ProtectedRoute isLogin={isLogin} allowedRoles={['estudiante','admin']} userRoles={roles}>
+              <ProyectoForm idpersona={userId || ''} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/editar_proyecto/:id"
           element={
             <ProtectedRoute isLogin={isLogin} allowedRoles={['estudiante','admin']} userRoles={roles}>
               <ProyectoForm idpersona={userId || ''} />
@@ -131,6 +140,14 @@ const App: React.FC = () => {
           element={
             <ProtectedRoute isLogin={isLogin} allowedRoles={['estudiante','admin']} userRoles={roles}>
               <SonarQube />
+            </ProtectedRoute>
+          }
+        />
+         <Route 
+          path="/sonarqube/instructions/:id"
+          element={
+            <ProtectedRoute isLogin={isLogin} allowedRoles={['estudiante','admin']} userRoles={roles}>
+              <SonarQubeInstructions />
             </ProtectedRoute>
           }
         />

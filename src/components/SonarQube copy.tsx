@@ -2,14 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
-import api from '../api';
+import api from '../api'; // Asegúrate de que `api` esté configurado para manejar las solicitudes.
 
 interface Proyecto {
     _id?: string;
     nombre: string;
     link: string;
     branch?: string;
-    githubtoken?: string;
 }
 
 interface Metric {
@@ -29,24 +28,28 @@ const SonarQube: React.FC = () => {
     const [nombre, setNombre] = useState('');
     const [link, setLink] = useState('');
     const [branch, setBranch] = useState('main');
-    const [githubToken, setGithubToken] = useState('');
     const [projectKey, setProjectKey] = useState('');
     const [metricKeys, setMetricKeys] = useState<string[]>([]);
     const [measures, setMeasures] = useState<Map<string, string>>(new Map());
     const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 
+    const loginCredentials = {
+        login: 'admin',
+        password: 'admin12345',
+    };
+
     useEffect(() => {
         const login = async () => {
             try {
                 const response = await fetch('http://localhost:5000/api/sonarqube/login', {
-                    method: 'GET',
+                    method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(loginCredentials),
                     credentials: 'include'
                 });
 
                 if (response.ok) {
                     setIsLoggedIn(true);
-                    console.log("Inicio de sesión exitoso");
                 } else {
                     console.error('Login failed');
                 }
@@ -67,37 +70,25 @@ const SonarQube: React.FC = () => {
                     setNombre(proyecto.nombre);
                     setLink(proyecto.link);
                     setBranch(proyecto.branch || 'main');
-                    setGithubToken(proyecto.githubtoken || '');
 
                     if (proyecto.link) {
                         const repoUrl = proyecto.link;
                         const repoName = repoUrl.split('github.com/')[1];
                         const filePath = 'sonar-project.properties';
 
-                        // URL pública de la API de GitHub para obtener el archivo
                         const githubApiUrl = `https://api.github.com/repos/${repoName}/contents/${filePath}?ref=${branch}`;
-                        console.log(githubApiUrl);
 
-                        // Realizamos la petición usando el token obtenido del proyecto
-                        const githubResponse = await fetch(githubApiUrl, {
-                            headers: {
-                                Authorization: `token ${githubToken}`,
-                                'Content-Type': 'application/json',
-                            },
-                        });
-
+                        const githubResponse = await fetch(githubApiUrl);
                         if (!githubResponse.ok) {
                             throw new Error('Error fetching GitHub file');
                         }
-
                         const fileData = await githubResponse.json();
 
-                        // Procesamos el contenido del archivo si existe
                         if (fileData.content) {
                             const decodedContent = atob(fileData.content.replace(/\n/g, ''));
                             const lines = decodedContent.split('\n');
                             const projectKeyLine = lines.find(line => line.startsWith('sonar.projectKey='));
-                            console.log(projectKeyLine);
+
                             if (projectKeyLine) {
                                 const projectKeyValue = projectKeyLine.split('=')[1];
                                 setProjectKey(projectKeyValue);
@@ -112,29 +103,35 @@ const SonarQube: React.FC = () => {
         };
 
         fetchProyecto();
-    }, [id, branch, isLoggedIn, githubToken]);
+    }, [id, branch, isLoggedIn]);
 
     useEffect(() => {
         const fetchMetrics = async () => {
             try {
                 const metricsResponse = await fetch('http://localhost:5000/api/sonarqube/metrics', {
-                    
+                    method: 'GET',
+                    headers: { 
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include'
                 });
-                console.log(metricsResponse);
+                
                 const metricsData = await metricsResponse.json();
-                console.log(metricsData);
                 const keys = metricsData?.metricKeys || [];
                 setMetricKeys(keys);
 
                 const metricsString = keys.length > 0 ? keys.join(',') : '';
                 const measuresResponse = await fetch(`http://localhost:5000/api/sonarqube/measures?component=${projectKey}&metricKeys=${metricsString}`, {
+                    method: 'GET',
+                    headers: { 
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include'
                 });
-                console.log(measuresResponse);
                 if (!measuresResponse.ok) {
                     throw new Error('Error fetching measures');
                 }
                 const measuresData = await measuresResponse.json();
-                console.log(measuresData);
                 const measuresMap = new Map<string, string>();
                 measuresData?.data?.component?.measures?.forEach((measure: Measure) => {
                     measuresMap.set(measure.metric, measure.value);
@@ -145,9 +142,7 @@ const SonarQube: React.FC = () => {
             }
         };
 
-        if (projectKey) {
-            fetchMetrics();
-        }
+        fetchMetrics();
     }, [projectKey, isLoggedIn]);
 
     // Métricas que quieres mostrar y traducir
@@ -190,7 +185,8 @@ const SonarQube: React.FC = () => {
                 {allowedMetrics.map(({ key, label }) => {
                     const value = parseFloat(measures.get(key) || '0');
                     let color = value > 50 ? 'red' : value > 20 ? 'orange' : 'green';
-
+                    
+                    // Para campos que no son numéricos (objetos)
                     if (key === 'maintainability_issues' || key === 'security_issues' || key === 'reliability_issues') {
                         const issues = JSON.parse(measures.get(key) || '{}');
                         return (
@@ -201,9 +197,10 @@ const SonarQube: React.FC = () => {
                         );
                     }
 
+                    // Para calidad de puertas (quality_gate_details)
                     if (key === 'quality_gate_details') {
                         const qualityGate = JSON.parse(measures.get(key) || '{"level": "Desconocido"}');
-                        const qualityLevel = qualityGate.level;
+                        const qualityLevel = qualityGate.level;  // Extraemos solo el nivel de la calidad
                         return (
                             <div key={key} className="p-4 bg-white shadow-md rounded-lg flex flex-col items-center justify-center">
                                 <h2 className="text-xl font-bold mb-2 text-black">{label}</h2>
@@ -212,7 +209,7 @@ const SonarQube: React.FC = () => {
                                 </p>
                             </div>
                         );
-                    }
+                    }                    
 
                     return (
                         <div key={key} className="p-4 bg-white shadow-md rounded-lg flex flex-col items-center justify-center">
