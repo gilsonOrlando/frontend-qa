@@ -43,6 +43,15 @@ const Calculos: React.FC = () => {
         fetchCalculos();
     }, [id]);
 
+    const obtenerTextoSegunRango = (promedio: number) => {
+        const porcentaje = promedio * 100;
+        if (porcentaje >= 76) return 'Excelente';
+        if (porcentaje >= 51) return 'Aceptable';
+        if (porcentaje >= 26) return 'Insatisfactorio';
+        return 'Deficiente';
+    };
+    
+
     const generarPDF = useCallback(() => {
         const doc = new jsPDF();
         const pageWidth = doc.internal.pageSize.getWidth();
@@ -85,7 +94,11 @@ const Calculos: React.FC = () => {
         });
     
         finalY = (doc as any).lastAutoTable.finalY + 10; // Posición después de la tabla
-    
+        
+        doc.setFontSize(14);
+        doc.text(`Promedio Total: ${(promedioTotal * 100).toFixed(2)}% - ${textoRango}`, marginLeft, finalY);
+        finalY += 10;
+
         doc.setFontSize(12);
         doc.text('Detalles de los cálculos:', marginLeft, finalY);
         finalY += 10;
@@ -128,10 +141,11 @@ const Calculos: React.FC = () => {
         doc.save('calculos.pdf');
     }, [calculos]);
     
-    
-
     if (loading) return <p className="text-center text-gray-500">Cargando...</p>;
     if (error) return <p className="text-center text-red-500">{error}</p>;
+
+    const promedioTotal = calculos.reduce((acc, calc) => acc + calc.promedio, 0) / calculos.length;
+    const textoRango = obtenerTextoSegunRango(promedioTotal);
 
     const data: ChartData<'bar', number[], string> = {
         labels: calculos.map(calculo => calculo.nombre),
@@ -169,7 +183,7 @@ const Calculos: React.FC = () => {
                         calculos.map((calculo, index) => (
                             <tr key={index} className="border-b">
                                 <td className="py-3 px-4 text-gray-800">{calculo.nombre}</td>
-                                <td className="py-3 px-4 text-gray-800">{(calculo.promedio * 100).toFixed(2)}%</td>
+                                <td className="py-3 px-4 text-gray-800">{(calculo.promedio * 100).toFixed(2)}% - {textoRango}</td>
                             </tr>
                         ))
                     ) : (
