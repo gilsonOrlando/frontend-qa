@@ -153,12 +153,13 @@ const SonarQube: React.FC = () => {
 
                 const ncloc = parseFloat(measuresMap.get('ncloc') || '0');
                 const codeSmells = parseFloat(measuresMap.get('code_smells') || '0');
+                const complexity1 = parseFloat(measuresMap.get('complexity') || '0');
                 const duplicatedLines = parseFloat(measuresMap.get('duplicated_lines') || '0');
-                const lineCoverage = parseFloat(measuresMap.get('line_coverage') || '0');
+                const lineCoverage = parseFloat(measuresMap.get('lines_to_cover') || '0');
                 const cognitiveComplexity = parseFloat(measuresMap.get('cognitive_complexity') || '0');
                 const commentLinesDensity = parseFloat(measuresMap.get('comment_lines_density') || '0');
 
-                setDisenio(ncloc > 0 ? codeSmells / ncloc : 0);
+                setDisenio(ncloc > 0 ? complexity1 / ncloc : 0);
                 setDuplicaciones(ncloc > 0 ? duplicatedLines / ncloc : 0);
                 setCobertura(ncloc > 0 ? lineCoverage / ncloc : 0);
                 setMalaPractica(ncloc > 0 ? codeSmells / ncloc : 0);
@@ -185,18 +186,23 @@ const SonarQube: React.FC = () => {
         return metrics.length > 0 ? total / metrics.length : 0;
     };
 
-    const modularidadMetrics = [disenio, duplicaciones, cobertura];
-    const reusabilidadMetrics = [malaPractica, obsoleto, disenio, duplicaciones];
-    const analizabilidadMetrics = [malaPractica, redundante, cognitiveC, confuso, disenio, dificultadE, densidadC];
-    const capacidadModificadoMetrics = [malaPractica, redundante, disenio, duplicaciones];
-    const capacidadProbadoMetrics = [redundante, disenio, dificultadE, cobertura];
-
+    const modularidadMetrics = [parseFloat((disenio *100).toFixed(2)), parseFloat((duplicaciones *100).toFixed(2)), parseFloat((cobertura *100).toFixed(2))];
+    const reusabilidadMetrics = [parseFloat((malaPractica*100).toFixed(2)), parseFloat((obsoleto*100).toFixed(2)), parseFloat((disenio*100).toFixed(2)), parseFloat((duplicaciones*100).toFixed(2))];
+    const analizabilidadMetrics = [parseFloat((malaPractica*100).toFixed(2)), parseFloat((redundante*100).toFixed(2)), parseFloat((cognitiveC*100).toFixed(2)), parseFloat((confuso*100).toFixed(2)), parseFloat((disenio*100).toFixed(2)), parseFloat((dificultadE*100).toFixed(2)), parseFloat((densidadC).toFixed(2))];
+    const capacidadModificadoMetrics = [parseFloat((malaPractica*100).toFixed(2)), parseFloat((redundante*100).toFixed(2)), parseFloat((disenio*100).toFixed(2)), parseFloat((duplicaciones*100).toFixed(2))];
+    const capacidadProbadoMetrics = [parseFloat((redundante*100).toFixed(2)), parseFloat((disenio *100).toFixed(2)), parseFloat((dificultadE*100).toFixed(2)), parseFloat((cobertura *100).toFixed(2))];
+    console.log(analizabilidadMetrics)
     // Calculate the averages for each subcharacteristic
     const modularidadAvg = calculateAverage(modularidadMetrics);
+    console.log(modularidadAvg)
     const reusabilidadAvg = calculateAverage(reusabilidadMetrics);
+    console.log(reusabilidadAvg)
     const analizabilidadAvg = calculateAverage(analizabilidadMetrics);
+    console.log(analizabilidadAvg)
     const capacidadModificadoAvg = calculateAverage(capacidadModificadoMetrics);
+    console.log(capacidadModificadoAvg)
     const capacidadProbadoAvg = calculateAverage(capacidadProbadoMetrics);
+    console.log(capacidadProbadoAvg)
 
     // Apply the transformation 100 - average
     const modularidadResult = 100 - modularidadAvg;
@@ -240,7 +246,7 @@ const SonarQube: React.FC = () => {
         { key: 'security_issues', label: 'Problemas de seguridad' },
         { key: 'cognitive_complexity', label: 'Complejidad cognitiva' },
         { key: 'quality_gate_details', label: 'Estado de calidad' },
-        { key: 'line_coverage', label: 'Líneas de cobertura' },
+        { key: 'lines_to_cover', label: 'Líneas de cobertura' },
         { key: 'complexity', label: 'Complejidad ciclomática' },
         { key: 'ncloc', label: 'líneas de código' },
         { key: 'duplicated_lines', label: 'líneas de duplicadas' }
@@ -279,7 +285,7 @@ const SonarQube: React.FC = () => {
                     <tbody>
                         <tr className="border-b border-gray-200">
                             <td className="p-4 text-sm font-medium text-gray-700">Diseño</td>
-                            <td className="p-4 text-sm text-gray-500">{(disenio * 100).toFixed(2)}%</td>
+                            <td className="p-4 text-sm text-gray-500">{(disenio* 100).toFixed(2)}%</td>
                         </tr>
                         <tr className="border-b border-gray-200">
                             <td className="p-4 text-sm font-medium text-gray-700">Duplicaciones</td>
