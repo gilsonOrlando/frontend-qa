@@ -43,6 +43,10 @@ const MetricaForm: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (listaVerificacion.length === 0) {
+            alert('Por favor, selecciona al menos una lista de verificación.');
+            return; // Detiene la ejecución si no hay pautas seleccionadas
+        }
         const data = { nombre, listaVerificacion };
         try {
             if (id) {
@@ -75,6 +79,7 @@ const MetricaForm: React.FC = () => {
                     <div className="mb-4">
                         <label className="block text-blue-950 font-semibold mb-2">Nombre</label>
                         <input
+                            required
                             type="text"
                             value={nombre}
                             onChange={(e) => setNombre(e.target.value)}

@@ -12,6 +12,10 @@ const ListaVerificacionForm: React.FC = () => {
     const [nombre, setNombre] = useState('');
     const [pautas, setPautas] = useState<string[]>([]);
     const [allPautas, setAllPautas] = useState<Pauta[]>([]);
+    
+    const [searchTerm, setSearchTerm] = useState(''); // Estado para manejar el texto de búsqueda
+    const [filteredPautas, setFilteredPautas] = useState<Pauta[]>([]); // Estado para las pautas filtradas
+    
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -19,6 +23,7 @@ const ListaVerificacionForm: React.FC = () => {
             try {
                 const response = await api.get('/pautas');
                 setAllPautas(response.data);
+                setFilteredPautas(response.data); // Inicialmente, todas las pautas están disponibles
             } catch (error) {
                 console.error('Error al obtener pautas:', error);
             }
@@ -43,6 +48,11 @@ const ListaVerificacionForm: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (pautas.length === 0) {
+            alert('Por favor, selecciona al menos una pauta.');
+            return; // Detiene la ejecución si no hay pautas seleccionadas
+        }
+
         const data = { nombre, pautas };
         try {
             if (id) {
@@ -72,7 +82,16 @@ const ListaVerificacionForm: React.FC = () => {
                 : [...prevPautas, pautaId]
         );
     };
+    const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setSearchTerm(value); // Actualiza el término de búsqueda
 
+        // Filtrar las pautas basadas en el término de búsqueda
+        const filtered = allPautas.filter(pauta =>
+            pauta.descripcion.toLowerCase().includes(value.toLowerCase())
+        );
+        setFilteredPautas(filtered);
+    };
     return (
         <div className="min-h-screen flex items-center justify-center bg-white">
             <div className="max-w-2xl w-full bg-white p-8 shadow-md rounded-lg">
@@ -83,6 +102,7 @@ const ListaVerificacionForm: React.FC = () => {
                     <div className="mb-4">
                         <label className="block text-blue-950 font-semibold mb-2">Nombre</label>
                         <input
+                            required
                             type="text"
                             value={nombre}
                             onChange={(e) => setNombre(e.target.value)}
@@ -90,8 +110,19 @@ const ListaVerificacionForm: React.FC = () => {
                         />
                     </div>
                     <div className="mb-6">
-                        <label className="block text-blue-950 font-semibold mb-2">Pautas</label>
-                        {allPautas.map((pauta) => (
+                        <label className="block text-blue-950 font-semibold mb-2">Seleccionar pautas</label>
+                        <div className="mt-4 flex items-center">
+                            <input
+                                type="text"
+                                placeholder="Buscar pautas..."
+                                value={searchTerm}
+                                onChange={handleSearch}// Actualiza el estado del término de búsqueda
+                                className="border border-gray-300 rounded p-2 flex-grow mr-2" // flex-grow permite que el input ocupe el espacio disponible
+                            />
+                        </div>
+                        <div><label className="block text-blue-950 font-semibold my-6">Lista pautas</label>
+                        </div>
+                        {filteredPautas.map((pauta) => (
                             <div key={pauta._id} className="flex items-center mb-2">
                                 <input
                                     type="checkbox"
@@ -100,7 +131,7 @@ const ListaVerificacionForm: React.FC = () => {
                                     onChange={() => handlePautaChange(pauta._id)}
                                     className="mr-2"
                                 />
-                                <label htmlFor={`pauta-${pauta._id}`} className="text-black">
+                                <label htmlFor={`pauta-${pauta._id}`} className="text-black text-justify">
                                     {pauta.descripcion}
                                 </label>
                             </div>

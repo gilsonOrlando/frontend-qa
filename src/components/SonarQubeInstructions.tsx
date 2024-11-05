@@ -72,6 +72,14 @@ sonar.sources=.
                 {/* GitHub Secret */}
                 <div className="mb-6">
                     <h3 className="text-lg font-semibold text-blue-950 mb-2">1. Crear un GitHub Secret</h3>
+                    <a className='text-black' href='https://github.com/settings/tokens' target="_blank">
+                        Primero tiene que crear el token de Github, con las siguiente nombre (Precione Aquí):
+                    </a>
+                    <pre className="bg-gray-100 p-4 rounded text-black">
+                        <strong>TOKENG:</strong><br />
+                        <strong>Valor:</strong> Es el resultado del link personal del token de Github.
+                    </pre>
+
                     <p className='text-black'>
                         En tu repositorio de GitHub, ve a <strong>Settings &gt; Secrets &gt; Actions</strong> y crea un nuevo secreto con los siguientes detalles:
                     </p>

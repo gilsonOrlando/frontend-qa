@@ -18,6 +18,10 @@ const ListaVerificacionList: React.FC = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [listaToDelete, setListaToDelete] = useState<string | null>(null);
+
+
     useEffect(() => {
         const fetchListas = async () => {
             try {
@@ -31,13 +35,25 @@ const ListaVerificacionList: React.FC = () => {
         fetchListas();
     }, []);
 
-    const handleDelete = async (id: string) => {
-        try {
-            await api.delete(`/listasVerificacion/${id}`);
-            setListas(listas.filter(lista => lista._id !== id));
-        } catch (error) {
-            console.error('Error al eliminar lista de verificación:', error);
+    const handleDelete = async () => {
+        if (listaToDelete) {
+            try {
+                await api.delete(`/listasVerificacion/${listaToDelete}`);
+                setListas(listas.filter(lista => lista._id !== listaToDelete));
+                closeModal(); // Cerrar el modal después de eliminar
+            } catch (error) {
+                console.error('Error al eliminar lista de verificación:', error);
+            }
         }
+    };
+    const openModal = (id: string) => {
+        setListaToDelete(id);
+        setIsModalOpen(true);
+    };
+
+    const closeModal = () => {
+        setIsModalOpen(false);
+        setListaToDelete(null); // Resetear el ID de la lista al cerrar
     };
 
     const indexOfLastItem = currentPage * itemsPerPage;
@@ -59,12 +75,12 @@ const ListaVerificacionList: React.FC = () => {
                             <h3 className="text-2xl font-semibold text-blue-950 mb-2">{lista.nombre}</h3>
                             <ul className="list-disc list-inside ml-4 mb-4">
                                 {lista.pautas.map((pauta) => (
-                                    <li key={pauta._id} className="text-gray-700">{pauta.pregunta}</li>
+                                    <li key={pauta._id} className="text-gray-700 text-justify">{pauta.pregunta}</li>
                                 ))}
                             </ul>
                             <div className="flex space-x-4">
                                 <Link to={`/editar_listaVerificacion/${lista._id}`} className="px-4 py-2 bg-yellow-500 text-white rounded-lg shadow">Editar</Link>
-                                <button onClick={() => handleDelete(lista._id)} className="px-4 py-2 bg-red-600 text-white rounded-lg shadow">Eliminar</button>
+                                <button onClick={() => openModal(lista._id)} className="px-4 py-2 bg-red-600 text-white rounded-lg shadow">Eliminar</button>
                             </div>
                         </li>
                     ))}
@@ -80,6 +96,19 @@ const ListaVerificacionList: React.FC = () => {
                         </button>
                     ))}
                 </div>
+                {/* Modal de Confirmación */}
+                {isModalOpen && (
+                    <div className="fixed inset-0 flex items-center justify-center z-50">
+                        <div className="bg-white p-6 rounded shadow-lg">
+                            <h3 className="text-lg font-semibold">Confirmar Eliminación</h3>
+                            <p>¿Estás seguro de que deseas eliminar esta lista de verificación?</p>
+                            <div className="flex justify-end mt-4">
+                                <button onClick={closeModal} className="px-4 py-2 bg-gray-300 text-black rounded mr-2">Cancelar</button>
+                                <button onClick={handleDelete} className="px-4 py-2 bg-red-600 text-white rounded">Eliminar</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

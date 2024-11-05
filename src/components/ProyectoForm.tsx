@@ -59,20 +59,23 @@ const ProyectoForm: React.FC<ProyectoFormProps> = ({ idpersona }) => {
         alert('Proyecto actualizado exitosamente');
       } else {
         // CREAR NUEVO PROYECTO
-        await api.post('/proyectos', data); // Crear proyecto en tu sistema local
+        await api.post('/proyectos', data); //Crear proyecto en tu sistema local
         alert('Proyecto creado exitosamente');
 
         // Crear el proyecto en SonarQube
         const sonarQubeResponse = await api.post('/sonarqube/proyectos/crear', { nombreProyecto: nombre });
         if (sonarQubeResponse.status === 200) {
           alert('Proyecto creado en SonarQube exitosamente');
+          console.log(branch)
+          console.log(nombre)
+          await api.post('/sonarqube/rename', {  name: branch , project: nombre });
         } else {
           alert('Error al crear el proyecto en SonarQube');
         }
       }
       navigate('/lista_proyectos');
     } catch (error) {
-      console.error('Error al guardar proyecto:', error);
+      console.error('Error al guardar proyectos:', error);
       alert('Error al guardar proyecto');
     }
   };

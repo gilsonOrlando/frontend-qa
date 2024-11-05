@@ -75,6 +75,7 @@ const PautaForm: React.FC = () => {
                     <div className="mb-4">
                         <label className="block text-blue-950 font-semibold mb-2">Descripción</label>
                         <input
+                            required
                             type="text"
                             value={descripcion}
                             onChange={(e) => setDescripcion(e.target.value)}
@@ -84,6 +85,7 @@ const PautaForm: React.FC = () => {
                     <div className="mb-4">
                         <label className="block text-blue-950 font-semibold mb-2">Pregunta</label>
                         <input
+                            required
                             type="text"
                             value={pregunta}
                             onChange={(e) => setPregunta(e.target.value)}
@@ -95,6 +97,7 @@ const PautaForm: React.FC = () => {
                         {nivelesCumplimiento.map((nivel, index) => (
                             <div key={index} className="flex space-x-4 mb-2 items-center">
                                 <input
+                                    required
                                     type="text"
                                     placeholder="Descripción"
                                     value={nivel.descripcion}

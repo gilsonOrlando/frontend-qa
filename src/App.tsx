@@ -162,6 +162,14 @@ const App: React.FC = () => {
           }
         />
         <Route 
+          path="/editar_pauta/:id"
+          element={
+            <ProtectedRoute isLogin={isLogin} allowedRoles={['admin']} userRoles={roles}>
+              <PautaForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route 
           path="/lista_pauta"
           element={
             <ProtectedRoute isLogin={isLogin} allowedRoles={['admin']} userRoles={roles}>
@@ -171,6 +179,14 @@ const App: React.FC = () => {
         />
         <Route 
           path="/crear_listaVerificacion"
+          element={
+            <ProtectedRoute isLogin={isLogin} allowedRoles={['admin']} userRoles={roles}>
+              <ListaVerificacionForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/editar_listaVerificacion/:id"
           element={
             <ProtectedRoute isLogin={isLogin} allowedRoles={['admin']} userRoles={roles}>
               <ListaVerificacionForm />
@@ -194,6 +210,14 @@ const App: React.FC = () => {
           }
         />
         <Route 
+          path="/editar_metrica/:id"
+          element={
+            <ProtectedRoute isLogin={isLogin} allowedRoles={['admin']} userRoles={roles}>
+              <MetricaForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route 
           path="/lista_metrica"
           element={
             <ProtectedRoute isLogin={isLogin} allowedRoles={['admin']} userRoles={roles}>
@@ -203,6 +227,14 @@ const App: React.FC = () => {
         />
         <Route 
           path="/crear_subcaracteristica"
+          element={
+            <ProtectedRoute isLogin={isLogin} allowedRoles={['admin']} userRoles={roles}>
+              <SubcaracteristicaForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/editar_subcaracteristica/:id"
           element={
             <ProtectedRoute isLogin={isLogin} allowedRoles={['admin']} userRoles={roles}>
               <SubcaracteristicaForm />

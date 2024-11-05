@@ -41,7 +41,7 @@ const SonarQube: React.FC = () => {
     useEffect(() => {
         const login = async () => {
             try {
-                const response = await fetch('http://localhost:5000/api/sonarqube/login', {
+                const response = await fetch('backend-qa-ckavg5ewbqeubrgb.canadacentral-01.azurewebsites.net/api/sonarqube/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(loginCredentials),
@@ -108,7 +108,7 @@ const SonarQube: React.FC = () => {
     useEffect(() => {
         const fetchMetrics = async () => {
             try {
-                const metricsResponse = await fetch('http://localhost:5000/api/sonarqube/metrics', {
+                const metricsResponse = await fetch('backend-qa-ckavg5ewbqeubrgb.canadacentral-01.azurewebsites.net/api/sonarqube/metrics', {
                     method: 'GET',
                     headers: { 
                         'Content-Type': 'application/json'
@@ -121,7 +121,7 @@ const SonarQube: React.FC = () => {
                 setMetricKeys(keys);
 
                 const metricsString = keys.length > 0 ? keys.join(',') : '';
-                const measuresResponse = await fetch(`http://localhost:5000/api/sonarqube/measures?component=${projectKey}&metricKeys=${metricsString}`, {
+                const measuresResponse = await fetch(`backend-qa-ckavg5ewbqeubrgb.canadacentral-01.azurewebsites.net/api/sonarqube/measures?component=${projectKey}&metricKeys=${metricsString}`, {
                     method: 'GET',
                     headers: { 
                         'Content-Type': 'application/json'

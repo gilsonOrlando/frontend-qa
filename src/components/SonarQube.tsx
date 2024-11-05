@@ -49,6 +49,8 @@ const SonarQube: React.FC = () => {
         const login = async () => {
             try {
                 const response = await fetch('http://localhost:5000/api/sonarqube/login', {
+                //const response = await fetch('backend-qa-ckavg5ewbqeubrgb.canadacentral-01.azurewebsites.net/api/sonarqube/login', {
+
                     method: 'GET',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include'
@@ -128,6 +130,7 @@ const SonarQube: React.FC = () => {
         const fetchMetrics = async () => {
             try {
                 const metricsResponse = await fetch('http://localhost:5000/api/sonarqube/metrics', {
+                //const metricsResponse = await fetch('backend-qa-ckavg5ewbqeubrgb.canadacentral-01.azurewebsites.net/api/sonarqube/metrics', {
 
                 });
                 console.log(metricsResponse);
@@ -137,7 +140,10 @@ const SonarQube: React.FC = () => {
                 setMetricKeys(keys);
 
                 const metricsString = keys.length > 0 ? keys.join(',') : '';
+               
                 const measuresResponse = await fetch(`http://localhost:5000/api/sonarqube/measures?component=${projectKey}&metricKeys=${metricsString}`, {
+                    //const measuresResponse = await fetch(`backend-qa-ckavg5ewbqeubrgb.canadacentral-01.azurewebsites.net/api/sonarqube/measures?component=${projectKey}&metricKeys=${metricsString}`, {
+
                 });
                 console.log(measuresResponse);
                 if (!measuresResponse.ok) {
@@ -248,8 +254,8 @@ const SonarQube: React.FC = () => {
         { key: 'quality_gate_details', label: 'Estado de calidad' },
         { key: 'lines_to_cover', label: 'Líneas de cobertura' },
         { key: 'complexity', label: 'Complejidad ciclomática' },
-        { key: 'ncloc', label: 'líneas de código' },
-        { key: 'duplicated_lines', label: 'líneas de duplicadas' }
+        { key: 'ncloc', label: 'Líneas de código' },
+        { key: 'duplicated_lines', label: 'Líneas duplicadas' }
     ];
 
     const renderProgressBar = (value: number, text: string, color: string) => (
@@ -334,7 +340,7 @@ const SonarQube: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
                 {allowedMetrics.map(({ key, label }) => {
                     const value = parseFloat(measures.get(key) || '0');
-                    let color = value > 50 ? 'red' : value > 20 ? 'orange' : 'green';
+                    let color = value > 1500 ? 'red' : value > 500 ? 'orange' : 'green';
 
                     if (key === 'maintainability_issues' || key === 'security_issues') {
                         try {

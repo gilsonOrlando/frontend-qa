@@ -17,6 +17,8 @@ const MetricaList: React.FC = () => {
     const [metricas, setMetricas] = useState<Metrica[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [metricaToDelete, setMetricaToDelete] = useState<string | null> (null);
 
     useEffect(() => {
         const fetchMetricas = async () => {
@@ -52,13 +54,25 @@ const MetricaList: React.FC = () => {
         fetchMetricas();
     }, []);
 
-    const handleDelete = async (id: string) => {
-        try {
-            await api.delete(`/metricas/${id}`);
-            setMetricas(metricas.filter(metrica => metrica._id !== id));
-        } catch (error) {
-            console.error('Error al eliminar métrica:', error);
+    const handleDelete = async () => {
+        if (metricaToDelete) {
+            try {
+                await api.delete(`/metricas/${metricaToDelete}`);
+                setMetricas(metricas.filter(metrica => metrica._id !== metricaToDelete));
+                closeModal(); // Cerrar el modal después de eliminar
+            } catch (error) {
+                console.error('Error al eliminar métrica:', error);
+            }
         }
+    };
+    const openModal = (id: string) => {
+        setMetricaToDelete(id);
+        setIsModalOpen(true);
+    };
+
+    const closeModal = () => {
+        setIsModalOpen(false);
+        setMetricaToDelete(null); // Resetear el ID al cerrar
     };
 
     const indexOfLastItem = currentPage * itemsPerPage;
@@ -81,7 +95,7 @@ const MetricaList: React.FC = () => {
                             <p className='text-black'>{`Lista de Verificación: ${metrica.listaVerificacion.nombre}`}</p>
                             <div className="flex space-x-4 mt-2">
                                 <Link to={`/editar_metrica/${metrica._id}`} className="px-4 py-2 bg-yellow-500 text-white rounded">Editar</Link>
-                                <button onClick={() => handleDelete(metrica._id)} className="px-4 py-2 bg-red-600 text-white rounded">Eliminar</button>
+                                <button onClick={() => openModal(metrica._id)} className="px-4 py-2 bg-red-600 text-white rounded">Eliminar</button>
                             </div>
                         </li>
                     ))}
@@ -93,6 +107,19 @@ const MetricaList: React.FC = () => {
                         </button>
                     ))}
                 </div>
+                {/* Modal de Confirmación */}
+                {isModalOpen && (
+                    <div className="fixed inset-0 flex items-center justify-center z-50">
+                        <div className="bg-white p-6 rounded shadow-lg">
+                            <h3 className="text-lg font-semibold">Confirmar Eliminación</h3>
+                            <p>¿Estás seguro de que deseas eliminar esta métrica?</p>
+                            <div className="flex justify-end mt-4">
+                                <button onClick={closeModal} className="px-4 py-2 bg-gray-300 text-black rounded mr-2">Cancelar</button>
+                                <button onClick={handleDelete} className="px-4 py-2 bg-red-600 text-white rounded">Eliminar</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
