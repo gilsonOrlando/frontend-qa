@@ -131,7 +131,6 @@ const SonarQube: React.FC = () => {
             try {
                 const metricsResponse = await fetch('http://localhost:5000/api/sonarqube/metrics', {
                 //const metricsResponse = await fetch('backend-qa-ckavg5ewbqeubrgb.canadacentral-01.azurewebsites.net/api/sonarqube/metrics', {
-
                 });
                 console.log(metricsResponse);
                 const metricsData = await metricsResponse.json();
@@ -143,7 +142,6 @@ const SonarQube: React.FC = () => {
                
                 const measuresResponse = await fetch(`http://localhost:5000/api/sonarqube/measures?component=${projectKey}&metricKeys=${metricsString}`, {
                     //const measuresResponse = await fetch(`backend-qa-ckavg5ewbqeubrgb.canadacentral-01.azurewebsites.net/api/sonarqube/measures?component=${projectKey}&metricKeys=${metricsString}`, {
-
                 });
                 console.log(measuresResponse);
                 if (!measuresResponse.ok) {
