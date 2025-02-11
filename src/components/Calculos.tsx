@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ChartData, ChartOptions } from 'chart.js';
@@ -11,6 +11,7 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
 interface Comentario {
     pregunta: string;
+    respuesta: string;
     comentario: string;
 }
 
@@ -19,19 +20,28 @@ interface Calculo {
     promedio: number;
     comentarios: Comentario[];
 }
+interface CriteriosValoracion {
+    _id: string;
+    valor1: number;
+    valor2: number;
+    criterio: string;
+}
 
 const Calculos: React.FC = () => {
     const { id } = useParams<{ id: string }>();
+    const navigate = useNavigate();
     const [calculos, setCalculos] = useState<Calculo[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const chartRef = useRef<ChartJS<'bar', number[], string> | null>(null);
+    const [criterios, setCriterios] = useState<CriteriosValoracion[]>([]);
 
     useEffect(() => {
         const fetchCalculos = async () => {
             try {
                 const response = await api.get(`/calculos/promedios/${id}`);
                 setCalculos(response.data);
+                
             } catch (error) {
                 console.error('Error al obtener cálculos:', error);
                 setError('Error al obtener cálculos');
@@ -43,14 +53,38 @@ const Calculos: React.FC = () => {
         fetchCalculos();
     }, [id]);
 
+    useEffect(() => {
+        // Obtener todos los registros al cargar el componente
+        const fetchCriterios = async () => {
+            try {
+                setLoading(true);
+                const response = await api.get('/criteriosValoracion');
+                setCriterios(response.data);
+            } catch (error) {
+                console.error('Error al obtener criterios de valoración:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchCriterios();
+    }, []);
+
+    // Función para obtener el texto según el promedio
     const obtenerTextoSegunRango = (promedio: number) => {
         const porcentaje = promedio * 100;
-        if (porcentaje >= 76) return 'Excelente';
-        if (porcentaje >= 51) return 'Aceptable';
-        if (porcentaje >= 26) return 'Insatisfactorio';
-        return 'Deficiente';
+
+        // Buscar el criterio adecuado según el porcentaje
+        const criterioEncontrado = criterios.find((criterio) => {
+            // Asegurarse de que valor1 sea el límite superior y valor2 el límite inferior
+            const [limiteInferior, limiteSuperior] = [criterio.valor1, criterio.valor2].sort((a, b) => a - b);
+
+            return porcentaje >= limiteInferior && porcentaje <= limiteSuperior;
+        });
+
+        return criterioEncontrado ? criterioEncontrado.criterio : 'Valor fuera de rango';
     };
-    
+
 
     const generarPDF = useCallback(() => {
         const doc = new jsPDF();
@@ -59,11 +93,11 @@ const Calculos: React.FC = () => {
         const marginLeft = 15;
         const marginRight = 15;
         let finalY = 20; // Variable para controlar la posición vertical
-    
+
         doc.setFontSize(18);
         doc.text('Reporte de Cálculos del Proyecto', pageWidth / 2, finalY, { align: 'center' });
         finalY += 10;
-    
+
         // Agregar gráfico si existe
         if (chartRef.current) {
             const chartCanvas = chartRef.current.canvas as HTMLCanvasElement;
@@ -71,20 +105,20 @@ const Calculos: React.FC = () => {
             doc.addImage(chartImage, 'PNG', marginLeft, finalY, pageWidth - marginLeft - marginRight, 60);
             finalY += 70; // Espacio después del gráfico
         }
-    
+
         doc.setFontSize(14);
         doc.text('Resumen de Cálculos', marginLeft, finalY);
         finalY += 10;
-    
+
         // Crear la tabla de resumen de cálculos
         const tableColumn = ['Nombre', 'Promedio (%)'];
         const tableRows: (string | number)[][] = [];
-    
+
         calculos.forEach(calculo => {
             const calculoData = [calculo.nombre, `${(calculo.promedio * 100).toFixed(2)} /100% `];
             tableRows.push(calculoData);
         });
-    
+
         (doc as any).autoTable({
             head: [tableColumn],
             body: tableRows,
@@ -92,9 +126,9 @@ const Calculos: React.FC = () => {
             margin: { left: marginLeft, right: marginLeft },
             styles: { overflow: 'linebreak', fontSize: 12 },
         });
-    
+
         finalY = (doc as any).lastAutoTable.finalY + 10; // Posición después de la tabla
-        
+
         doc.setFontSize(14);
         doc.text(`Promedio Total: ${(promedioTotal * 100).toFixed(2)}% - ${textoRango}`, marginLeft, finalY);
         finalY += 10;
@@ -102,45 +136,49 @@ const Calculos: React.FC = () => {
         doc.setFontSize(12);
         doc.text('Detalles de los cálculos:', marginLeft, finalY);
         finalY += 10;
-    
+
         // Tabla para mostrar los comentarios y descripciones de las pautas
         const comentarioRows: any[] = [];
-    
+
         calculos.forEach(calculo => {
             calculo.comentarios.forEach(comentario => {
                 const pregunta = comentario.pregunta;
+                const respuesta = comentario.respuesta;
                 const comentarioTexto = comentario.comentario ? comentario.comentario : 'Sin comentario';
-    
+
                 // Agregar cada fila con la pauta y el comentario
                 comentarioRows.push({
                     nombre: calculo.nombre,
                     pregunta: pregunta,
+                    respuesta: respuesta,
                     comentario: comentarioTexto,
                 });
             });
         });
-    
+
         // Definir las columnas y generar la tabla
         (doc as any).autoTable({
-            head: [['Nombre', 'Pregunta', 'Comentario']],
+            head: [['Nombre', 'Pregunta', 'Respuesta', 'Anotaciones']],
             body: comentarioRows.map(row => [
                 row.nombre,
                 row.pregunta,
+                row.respuesta,
                 row.comentario,
             ]),
             startY: finalY,
             margin: { left: marginLeft, right: marginLeft },
             styles: { fontSize: 12, cellWidth: 'wrap' },
             columnStyles: {
-                0: { cellWidth: 50 },  // Columna Nombre
-                1: { cellWidth: 60 },  // Columna Pauta Descripción
-                2: { cellWidth: 80 },  // Columna Comentario
+                0: { cellWidth: 30 },  // Columna Nombre
+                1: { cellWidth: 55 },  // Columna Pauta Descripción
+                2: { cellWidth: 55 },  // Columna Comentario
+                3: { cellWidth: 40 },
             },
         });
-    
-        doc.save('calculos.pdf');
+
+        doc.save('ReporteListaVerificación.pdf');
     }, [calculos]);
-    
+
     if (loading) return <p className="text-center text-gray-500">Cargando...</p>;
     if (error) return <p className="text-center text-red-500">{error}</p>;
 
@@ -167,7 +205,13 @@ const Calculos: React.FC = () => {
 
     return (
         <div className="max-w-4xl mx-auto p-4">
-            <h1 className="text-3xl font-bold mb-6 text-gray-900 text-center">Cálculos del Proyecto</h1>
+            <h1 className="text-3xl font-bold mb-6 text-gray-900 text-center">REPORTE DE LA PRUEBA</h1>
+            <button
+                onClick={() => navigate(-1)}  // Agregar el botón para regresar
+                className="mt-4 bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-600 transition duration-300"
+            >
+                Regresar al repositorio
+            </button>
             <div className="mb-6" style={{ height: '400px' }}>
                 <Bar data={data} options={options} ref={chartRef} />
             </div>

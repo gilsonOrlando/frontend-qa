@@ -34,6 +34,7 @@ const MetricsResponse: React.FC = () => {
   const [respuestas, setRespuestas] = useState<{ [key: string]: { valor: number | null; comentario: string } }>({});
   const [nombreRespuesta, setNombreRespuesta] = useState<string>('');
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [alerta, setAlerta] = useState<string | null>(null);
   const navigate = useNavigate();
   const { id: proyectoId } = useParams<{ id: string }>();
 
@@ -74,6 +75,25 @@ const MetricsResponse: React.FC = () => {
   };
 
   const handleSubmit = async () => {
+    const pautasSinResponder = allPautas.some((pauta) => {
+      const metrica = metricas.find((m) =>
+        m.listaVerificacion.pautas.some((p) => p._id === pauta._id)
+      );
+      const listaVerificacionId = metrica?.listaVerificacion._id;
+      const respuesta = respuestas[`${pauta._id}-${listaVerificacionId}`];
+      return !respuesta || respuesta.valor === null; // Sin respuesta
+    });
+  
+    if (pautasSinResponder) {
+      alert('Aun existen pautas sin responder');
+      return;
+    }
+  
+    // Verificar si el nombre de la respuesta está vacío
+    if (!nombreRespuesta.trim()) {
+      alert('El título de la prueba está vacío');
+      return;
+    }
     const formattedRespuestas = Object.keys(respuestas).map(key => {
       const [pautaId, listaVerificacionId] = key.split('-');
       return {
@@ -101,6 +121,14 @@ const MetricsResponse: React.FC = () => {
     }
   };
 
+  const handleCancel = () => {
+    const confirmCancel = window.confirm("¿Desea cancelar la ejecución de la lista de verificación?");
+    if (confirmCancel) {
+      navigate(`/pruebas/${proyectoId}`);
+    }
+  };
+  const isSubmitDisabled = () => !nombreRespuesta.trim();
+
   // Aplanar las pautas de todas las métricas para la paginación
   const allPautas: Pauta[] = metricas.flatMap(metrica => metrica.listaVerificacion.pautas);
 
@@ -118,13 +146,16 @@ const MetricsResponse: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4 text-gray-800">Cuestionario</h1>
+      <h1 className="text-2xl font-bold mb-4 text-gray-800">Lista de verificación</h1>
       <div className="mb-4">
-        <label className="block text-blue-950 font-semibold mb-2">Nombre de la Respuesta</label>
+        <label className="block text-blue-950 font-semibold mb-2">Nombre de la prueba</label>
         <input
           type="text"
           value={nombreRespuesta}
-          onChange={(e) => setNombreRespuesta(e.target.value)}
+          onChange={(e) => {
+            setNombreRespuesta(e.target.value);
+            if (e.target.value) setAlerta(null); // Si se llena el campo, quitar la alerta
+          }}
           className="w-full p-2 border border-gray-300 rounded bg-white text-black"
         />
       </div>
@@ -162,7 +193,7 @@ const MetricsResponse: React.FC = () => {
                     )}
                   </ul>
                   <textarea
-                    placeholder="Agregar comentario"
+                    placeholder="Anotaciones"
                     value={respuestas[`${pauta._id}-${listaVerificacionId}`]?.comentario || ''}
                     onChange={(e) => handleCommentChange(pauta._id, listaVerificacionId, e.target.value)}
                     className="w-full p-2 border bg-white text-black border-gray-300 rounded mt-2"
@@ -194,13 +225,22 @@ const MetricsResponse: React.FC = () => {
           Siguiente
         </button>
       </div>
+      <div className="flex flex-col items-start gap-2 mt-2 w-auto">
       <button
         onClick={handleSubmit}
-        disabled={!nombreRespuesta}
-        className={`px-4 py-2 ${!nombreRespuesta ? 'bg-gray-300 text-gray-700' : 'bg-blue-500 text-white'} rounded-lg shadow-md hover:${!nombreRespuesta ? 'bg-gray-400' : 'bg-blue-600'} focus:outline-none focus:ring-2 focus:ring-blue-400 mt-4`}
+        disabled={isSubmitDisabled()}
+        className={`px-4 py-2 ${isSubmitDisabled() ? 'bg-gray-300 text-gray-700' : 'bg-blue-500 text-white'} rounded-lg shadow-md hover:${isSubmitDisabled() ? 'bg-gray-400' : 'bg-blue-600'} focus:outline-none focus:ring-2 focus:ring-blue-400 mt-4`}
       >
         Guardar respuestas
       </button>
+      <button
+          onClick={handleCancel}
+          className="w-[172px] px-4 py-2 bg-red-500 text-white rounded-lg shadow-md hover:bg-red-600 
+       focus:outline-none focus:ring-2 focus:ring-red-400 mt-2 text-left"
+        >
+          Cancelar
+        </button>
+      </div>
     </div>
   );
 };

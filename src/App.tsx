@@ -28,6 +28,8 @@ import SelectSubcaracteristicas from './components/SelectSubcaracteristicas';
 import SelectMetricas from './components/SelectMetricas';
 import SonarQube from './components/SonarQube';
 import SonarQubeInstructions from './components/SonarQubeInstructions';
+import CriteriosValoracion from './components/CriteriosValoracion';
+import Informacion from './components/Informacion';
 
 const App: React.FC = () => {
   const { isLogin, userId, roles, logout } = useAuth();
@@ -151,6 +153,14 @@ const App: React.FC = () => {
             </ProtectedRoute>
           }
         />
+        <Route 
+          path="/informacion"
+          element={
+            <ProtectedRoute isLogin={isLogin} allowedRoles={['estudiante','admin']} userRoles={roles}>
+              <Informacion />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Rutas para admin y estudiantes */}
         <Route 
@@ -249,7 +259,16 @@ const App: React.FC = () => {
             </ProtectedRoute>
           }
         />
+        <Route 
+          path="/editar_criterioVerificacion"
+          element={
+            <ProtectedRoute isLogin={isLogin} allowedRoles={['admin']} userRoles={roles}>
+              <CriteriosValoracion />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
+      
     </div>
   );
 };

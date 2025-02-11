@@ -20,13 +20,17 @@ const Navbar: React.FC<NavbarProps> = ({ isLogin, onLogout }) => {
         <div className="flex justify-between items-center h-16">
           {/* Logo Section */}
           <div className="flex-shrink-0">
-            <Link to="/lista_proyectos">
+            <Link to="/">
               <img src={Logo} alt="Logo" className="h-14 w-auto" />
             </Link>
           </div>
 
           {/* Desktop Menu */}
           <div className="hidden md:flex md:items-center md:space-x-8">
+          <Link to="/editar_criterioVerificacion" className="relative text-gray-800 hover:text-blue-600 px-3 py-2 text-sm font-medium group">
+              Criterios ponderación
+              <span className="absolute left-0 bottom-0 w-0 h-[2px] bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
+            </Link>
             <Link to="/lista_pauta" className="relative text-gray-800 hover:text-blue-600 px-3 py-2 text-sm font-medium group">
               Pautas
               <span className="absolute left-0 bottom-0 w-0 h-[2px] bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
@@ -41,6 +45,10 @@ const Navbar: React.FC<NavbarProps> = ({ isLogin, onLogout }) => {
             </Link>
             <Link to="/lista_subcaracteristicas" className="relative text-gray-800 hover:text-blue-600 px-3 py-2 text-sm font-medium group">
               Subcaracterísticas
+              <span className="absolute left-0 bottom-0 w-0 h-[2px] bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
+            </Link>
+             <Link to="/informacion" className="relative text-gray-800 hover:text-blue-600 px-3 py-2 text-sm font-medium group">
+              Información
               <span className="absolute left-0 bottom-0 w-0 h-[2px] bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
             </Link>
             {isLogin && (
@@ -86,6 +94,10 @@ const Navbar: React.FC<NavbarProps> = ({ isLogin, onLogout }) => {
       {/* Mobile menu */}
       <div className={`${isOpen ? 'block' : 'hidden'} md:hidden`} id="mobile-menu">
         <div className="px-2 pt-2 pb-3 space-y-1">
+        <Link to="/editar_criterioVerificacion" className="relative text-gray-800 hover:text-blue-600 px-3 py-2 text-sm font-medium group">
+              Criterios ponderación
+              <span className="absolute left-0 bottom-0 w-0 h-[2px] bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
+            </Link>
           <Link to="/lista_pauta" className="text-gray-800 hover:bg-blue-600 hover:text-white block px-3 py-2 rounded-md text-base font-medium">
             Pautas
           </Link>
@@ -98,6 +110,10 @@ const Navbar: React.FC<NavbarProps> = ({ isLogin, onLogout }) => {
           <Link to="/lista_subcaracteristicas" className="text-gray-800 hover:bg-blue-600 hover:text-white block px-3 py-2 rounded-md text-base font-medium">
             Subcaracterísticas
           </Link>
+          <Link to="/informacion" className="relative text-gray-800 hover:text-blue-600 px-3 py-2 text-sm font-medium group">
+              Información
+              <span className="absolute left-0 bottom-0 w-0 h-[2px] bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
+            </Link>
           {isLogin && (
             <button onClick={onLogout} className="text-black hover:text-blue-950 bg-white">
               Cerrar Sesión

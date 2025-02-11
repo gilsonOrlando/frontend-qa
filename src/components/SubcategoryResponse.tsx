@@ -39,6 +39,7 @@ const SubcategoryResponse: React.FC = () => {
   const [respuestas, setRespuestas] = useState<{ [key: string]: { valor: number | null; comentario: string } }>({});
   const [nombreRespuesta, setNombreRespuesta] = useState<string>('');
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [alerta, setAlerta] = useState<string | null>(null);
   const navigate = useNavigate();
   const { id: subcaracteristicaId, id2: proyectoId, id3: intentosId } = useParams<{ id: string; id2: string; id3: string }>();
   const location = useLocation();
@@ -105,6 +106,24 @@ const SubcategoryResponse: React.FC = () => {
   };
 
   const handleSubmit = async () => {
+    // Validación de título de la prueba vacío
+    if (!nombreRespuesta.trim()) {
+      alert('El título de la prueba está vacío');
+      return;
+    }
+
+    // Validación de pautas sin responder
+    const pautasSinResponder = subcaracteristica?.metricas.some(metrica =>
+      metrica.listaVerificacion.pautas.some(pauta =>
+        !respuestas[`${pauta._id}-${metrica.listaVerificacion._id}`]?.valor
+      )
+    );
+    if (pautasSinResponder) {
+      alert('Aun existen pautas sin responder');
+      return;
+    }
+
+
     if (!intentosId) {
       alert('El número de intentos no está definido.');
       return;
@@ -136,6 +155,15 @@ const SubcategoryResponse: React.FC = () => {
       alert('Hubo un error al guardar las respuestas');
     }
   };
+  const handleCancel = () => {
+    const confirmCancel = window.confirm("¿Desea cancelar la ejecución de la lista de verificación?");
+    if (confirmCancel) {
+      navigate(`/pruebas/${proyectoId}`);
+    }
+  };
+  const isSubmitDisabled = () => {
+    return !nombreRespuesta.trim(); // Si el campo está vacío, deshabilita el botón
+  };
 
   const allPautas = subcaracteristica ? subcaracteristica.metricas.flatMap(metrica =>
     metrica.listaVerificacion.pautas
@@ -154,13 +182,16 @@ const SubcategoryResponse: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4 text-gray-800">Cuestionario</h1>
+      <h1 className="text-2xl font-bold mb-4 text-gray-800">Lista de verificación</h1>
       <div className="mb-4">
-        <label className="block text-blue-950 font-semibold mb-2">Nombre de la Respuesta</label>
+        <label className="block text-blue-950 font-semibold mb-2">Nombre de la prueba</label>
         <input
           type="text"
           value={nombreRespuesta}
-          onChange={(e) => setNombreRespuesta(e.target.value)}
+          onChange={(e) => {
+            setNombreRespuesta(e.target.value);
+            if (e.target.value) setAlerta(null); // Si se llena el campo, quitar la alerta
+          }}
           className="w-full p-2 border border-gray-300 rounded bg-white text-black"
         />
       </div>
@@ -198,7 +229,7 @@ const SubcategoryResponse: React.FC = () => {
                         )}
                       </ul>
                       <textarea
-                        placeholder="Agregar comentario"
+                        placeholder="Anotaciones"
                         value={respuestas[`${pauta._id}-${metrica.listaVerificacion._id}`]?.comentario || ''}
                         onChange={(e) =>
                           handleCommentChange(pauta._id, metrica.listaVerificacion._id, e.target.value)
@@ -234,13 +265,22 @@ const SubcategoryResponse: React.FC = () => {
           Siguiente
         </button>
       </div>
-      <button
-        onClick={handleSubmit}
-        disabled={!nombreRespuesta || currentPage < totalPages}
-        className={`px-4 py-2 ${!nombreRespuesta || currentPage < totalPages ? 'bg-gray-300 text-gray-700' : 'bg-blue-500 text-white'} rounded-lg shadow-md hover:${!nombreRespuesta || currentPage < totalPages ? 'bg-gray-400' : 'bg-blue-600'} focus:outline-none focus:ring-2 focus:ring-blue-400 mt-4`}
-      >
-        Guardar respuestas
-      </button>
+      <div className="flex flex-col items-start gap-2 mt-2 w-auto">
+        <button
+          onClick={handleSubmit}
+          disabled={isSubmitDisabled()}
+          className={`w-48 px-4 py-2 ${isSubmitDisabled() ? 'bg-gray-300 text-gray-700' : 'bg-blue-500 text-white'} rounded-lg shadow-md hover:${isSubmitDisabled() ? 'bg-gray-400' : 'bg-blue-600'} focus:outline-none focus:ring-2 focus:ring-blue-400`}
+        >
+          Guardar respuestas
+        </button>
+        <button
+          onClick={handleCancel}
+          className="w-48 px-4 py-2 bg-red-500 text-white rounded-lg"
+        >
+          Cancelar
+        </button>
+      </div>
+
     </div>
   );
 };

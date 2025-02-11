@@ -37,6 +37,8 @@ const MetricaResponse: React.FC = () => {
   const { id: metricaId, id2: proyectoId, id3: intentosId } = useParams<{ id: string; id2: string; id3: string }>();
   const location = useLocation();
   const additionalMetricas = location.state?.additionalMetricas || [];
+  const [isSubmitDisabled, setIsSubmitDisabled] = useState<boolean>(false);
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -99,6 +101,23 @@ const MetricaResponse: React.FC = () => {
   };
 
   const handleSubmit = async () => {
+    // Validación antes de enviar los datos
+    if (!nombreRespuesta || nombreRespuesta.trim() === '') {
+      alert('El título de la lista de verificación está vacío');
+      setIsSubmitDisabled(true); // Desactivar el botón
+      return;
+    }
+
+
+    const pautasSinResponder = allPautas.some(pauta =>
+      !respuestas[`${pauta._id}-${metrica?.listaVerificacion._id}`]?.valor
+    );
+
+    if (pautasSinResponder) {
+      alert('Aun existen pautas sin responder');
+      return;
+    }
+
     if (!intentosId) {
       alert('El número de intentos no está definido.');
       return;
@@ -118,18 +137,27 @@ const MetricaResponse: React.FC = () => {
       tipo: 'singleMetrica',
       metricaId,
       respuestas: formattedRespuestas,
-      nombre: nombreRespuesta,
+      nombre: nombreRespuesta.trim(),
       intentos: parseInt(intentosId, 10)
     };
 
     try {
       await api.post('/respuestas/guardar-respuestas', data);
+      //alert(JSON.stringify(data, null, 2));
       alert('Respuestas guardadas exitosamente');
       navigate(`/pruebas/${proyectoId}`);
     } catch (error) {
       alert('Hubo un error al guardar las respuestas');
     }
   };
+
+  const handleCancel = () => {
+    const confirmCancel = window.confirm("¿Desea cancelar la ejecución de la lista de verificación?");
+    if (confirmCancel) {
+      navigate(`/pruebas/${proyectoId}`);
+    }
+  };
+
 
   const allPautas = metrica ? metrica.listaVerificacion.pautas : [];
 
@@ -146,13 +174,18 @@ const MetricaResponse: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4 text-gray-800">Cuestionario</h1>
+      <h1 className="text-2xl font-bold mb-4 text-gray-800">Lista de verificación</h1>
       <div className="mb-4">
-        <label className="block text-blue-950 font-semibold mb-2">Nombre de la Respuesta</label>
+        <label className="block text-blue-950 font-semibold mb-2">Nombre de la prueba</label>
         <input
           type="text"
           value={nombreRespuesta}
-          onChange={(e) => setNombreRespuesta(e.target.value)}
+          onChange={(e) => {
+            setNombreRespuesta(e.target.value);
+            if (e.target.value.trim() !== '') {
+              setIsSubmitDisabled(false); // Reactivar el botón si el usuario escribe algo
+            }
+          }}
           className="w-full p-2 border border-gray-300 rounded bg-white text-black"
         />
       </div>
@@ -186,7 +219,7 @@ const MetricaResponse: React.FC = () => {
                   )}
                 </ul>
                 <textarea
-                  placeholder="Agregar comentario"
+                  placeholder="Apuntes de la pauta"
                   value={respuestas[`${pauta._id}-${metrica.listaVerificacion._id}`]?.comentario || ''}
                   onChange={(e) =>
                     handleCommentChange(pauta._id, metrica.listaVerificacion._id, e.target.value)
@@ -219,13 +252,28 @@ const MetricaResponse: React.FC = () => {
           Siguiente
         </button>
       </div>
-      <button
-        onClick={handleSubmit}
-        disabled={!nombreRespuesta}
-        className={`px-4 py-2 ${!nombreRespuesta ? 'bg-gray-300 text-gray-700' : 'bg-blue-500 text-white'} rounded-lg shadow-md hover:${!nombreRespuesta ? 'bg-gray-400' : 'bg-blue-600'} focus:outline-none focus:ring-2 focus:ring-blue-400 mt-4`}
-      >
-        Guardar respuestas
-      </button>
+      <div className="flex flex-col items-start gap-2 mt-2 w-auto">
+
+        <button
+          onClick={handleSubmit}
+          disabled={isSubmitDisabled}
+          className={`px-4 py-2 ${isSubmitDisabled ? 'bg-gray-300 text-gray-700' : 'bg-blue-500 text-white'} 
+              rounded-lg shadow-md hover:${isSubmitDisabled ? 'bg-gray-400' : 'bg-blue-600'} 
+              focus:outline-none focus:ring-2 focus:ring-blue-400 mt-4`}>
+          Guardar respuestas
+        </button>
+        <button
+          onClick={handleCancel}
+          className="w-[172px] px-4 py-2 bg-red-500 text-white rounded-lg shadow-md hover:bg-red-600 
+       focus:outline-none focus:ring-2 focus:ring-red-400 mt-2 text-left"
+        >
+          Cancelar
+        </button>
+
+      </div>
+
+
+
     </div>
   );
 };

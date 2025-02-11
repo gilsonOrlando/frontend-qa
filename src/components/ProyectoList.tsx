@@ -59,9 +59,41 @@ const ProyectoList: React.FC<ProyectoListProps> = ({ idpersona }) => {
         <div className="min-h-screen flex flex-col items-center bg-gray-100">
             <div className="w-full max-w-4xl bg-white p-6 shadow-md rounded-lg mt-6">
                 <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-2xl font-bold text-blue-950">Proyectos</h2>
+                    <h2 className="text-2xl font-bold text-blue-950">Proyectos QA</h2>
                     <Link to="/crear_proyecto" className="px-4 py-2 bg-blue-950 text-white rounded">Crear Proyecto</Link>
                 </div>
+                <div>
+                    <div className="flex items-center space-x-4">
+                        {/* Indicadores de tipo de prueba */}
+                        <div className="flex flex-col space-y-2">
+                            <div className="flex items-center space-x-2">
+                                <div className="flex items-center space-x-1">
+                                    <div className="w-4 h-4 bg-green-500 rounded"></div>
+                                    <span className="text-sm text-gray-600">Prueba basado en la experiencia</span>
+                                </div>
+
+                                <div className="flex items-center space-x-1">
+                                    <div className="w-4 h-4 bg-blue-500 rounded"></div>
+                                    <span className="text-sm text-gray-600">Prueba estática</span>
+                                </div>
+                            </div>
+
+                            {/* Nota debajo en negrita */}
+                            <div className="mt-2">
+                                <p className="text-xs font-bold text-gray-700 text-justify">
+                                    Nota: Para el análisis de SonarQube y cálculo del grado de mantenibilidad seguir instrucciones.
+                                </p>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    {/* Salto de línea en la parte inferior */}
+                    <div className="mb-4"></div>
+
+                </div>
+
+
                 <ul>
                     {proyectos.map((proyecto) => (
                         <li key={proyecto._id} className="mb-4">
@@ -72,13 +104,40 @@ const ProyectoList: React.FC<ProyectoListProps> = ({ idpersona }) => {
                             <p className='text-black'>
                                 Branch: <span className="text-gray-700">{proyecto.branch}</span> {/* Mostrar branch */}
                             </p>
-                            <div className="flex space-x-4 mt-2">
-                                <Link to={`/editar_proyecto/${proyecto._id}`} className="px-4 py-2 bg-yellow-500 text-white rounded">Editar</Link>
-                                <button onClick={() => openModal(proyecto._id)} className="px-4 py-2 bg-red-600 text-white rounded">Eliminar</button>
-                                <Link to={`/pruebas/${proyecto._id}`} className="px-4 py-2 bg-green-500 text-white rounded">Pruebas</Link>
-                                <Link to={`/sonarqube/instructions/${proyecto._id}`} className="px-4 py-2 bg-emerald-500 text-white rounded">Instrucciones</Link>
-                                <Link to={`/sonarqube/${proyecto._id}`} className="px-4 py-2 bg-blue-500 text-white rounded">Análisis SonarQube</Link>
+
+                            <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 mt-2">
+                                {/* Segundo cuadro - Verificar Mantenibilidad */}
+                                <div className="border border-gray-300 rounded-md p-4 w-full md:w-1/2">
+                                    <h2 className="text-sm font-semibold text-gray-700 mb-2 text-center">Verificar Mantenibilidad</h2>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {/* Subcuadro - Mitad Derecha */}
+                                        <div className="border border-gray-300 rounded-md p-2 flex flex-col space-y-2 w-full">
+                                        <p className="text-sm font-semibold text-gray-700 mb-2 text-center">Verificación automática</p>
+                                            <Link to={`/sonarqube/instructions/${proyecto._id}`} className="px-4 py-2 bg-gray-400 text-white rounded text-center text-sm">Seguir instrucciones</Link>
+                                            <Link to={`/sonarqube/${proyecto._id}`} className="px-4 py-2 bg-blue-500 text-white rounded text-center text-sm">Análisis SonarQube</Link>
+                                        </div>
+                                        {/* Subcuadro - Mitad Izquierda */}
+                                        <div className="border border-gray-300 rounded-md p-2 flex flex-col space-y-2 w-full">
+                                        <p className="text-sm font-semibold text-gray-700 mb-2 text-center">Verificación manual</p>
+                                            <Link to={`/pruebas/${proyecto._id}`} className="px-4 py-2 bg-green-500 text-white rounded text-center text-sm">Lista de verificación</Link>
+                                        </div>
+
+                                        
+                                    </div>
+                                </div>
+
+                                {/* Primer cuadro - Gestión del Proyecto */}
+                                <div className="border border-gray-300 rounded-md p-4 w-full md:w-1/2">
+                                    <h2 className="text-sm font-semibold text-gray-700 mb-2 text-center">Gestión del Proyecto</h2>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <Link to={`/editar_proyecto/${proyecto._id}`} className="px-4 py-2 bg-yellow-500 text-white rounded text-center text-sm">Editar</Link>
+                                        <button onClick={() => openModal(proyecto._id)} className="px-4 py-2 bg-red-600 text-white rounded text-center text-sm">Eliminar</button>
+                                    </div>
+                                </div>
                             </div>
+
+
+
                         </li>
                     ))}
                 </ul>

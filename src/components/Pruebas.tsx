@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api';
+import portada from '../assets/controldecalidad.jpg';
 
 interface Subcaracteristica {
     _id: string;
@@ -106,17 +107,36 @@ const Pruebas: React.FC = () => {
     return (
         <div className="min-h-screen flex flex-col items-center bg-gray-100">
             <div className="w-full max-w-4xl bg-white p-6 shadow-md rounded-lg mt-6">
-                <h2 className="text-2xl font-bold text-blue-950 mb-6 text-center">Seleccione el nivel para realizar sus pruebas</h2>
+                <button
+                    onClick={() => navigate('/lista_proyectos')}
+                    className="px-4 py-2 bg-blue-950 text-white rounded hover:bg-blue-800 transition-all"
+                    style={{ alignSelf: 'flex-start' }}
+                >
+                     Ir a Proyectos
+                </button>
+                <hr className="border-t-4 border-gray-300 my-6" />
+                <h2 className="text-2xl font-bold text-blue-950 mb-6 text-center">PRUEBA BASADO EN LA EXPERIENCIA</h2>
+
+                <img
+                    src={portada}
+                    alt="Control de Calidad"
+                    className="mx-auto mb-6 rounded-lg shadow-md w-full max-w-3xl h-auto max-h-40 object-cover"
+                />
+                <p className="text-justify text-gray-700 text-sm mt-4 italic">
+                    Utiliza listas de comprobación o verificación (condiciones) basadas en pautas de mantenibilidad, con la participación colaborativa del tester y el desarrollador, o la integración de ambos roles.
+                    El enfoque se fundamenta en técnicas de prueba de caja (código objeto de prueba), donde cada lista está asociada a una subcaracterística de mantenibilidad, asegurando una cobertura (búsqueda) sistemática de los defectos típicos.
+                </p>
+                <div className="mb-4"></div>
                 <div className="flex">
                     {/* Fase 1: Opciones */}
                     <div className="w-1/2 pr-4">
-                        <h3 className="text-xl font-semibold text-blue-950 mb-4">Fase 1: Planificación</h3>
+                        <h3 className="text-xl font-semibold text-blue-950 mb-4">Fase 1: Planificación de la prueba</h3>
                         <div className="mb-4">
-                            <label className="block text-blue-950 font-semibold mb-2">Nivel de Pruebas</label>
+                            <label className="block text-blue-950 font-semibold mb-2">Lista de verificación</label>
                             <select
                                 value={selectedOption}
                                 onChange={handleOptionChange}
-                                className="w-full p-2 border border-gray-300 rounded bg-white text-black"
+                                className="w-3/4 p-1 text-sm border-gray-300 rounded bg-white text-black"
                             >
                                 <option value="">Seleccione una opción</option>
                                 <option value="allSubcaracteristicas">A través de todas las subcaracterísticas</option>
@@ -131,7 +151,7 @@ const Pruebas: React.FC = () => {
                                 <select
                                     value={selectedSubcaracteristica}
                                     onChange={(e) => setSelectedSubcaracteristica(e.target.value)}
-                                    className="w-full p-2 border border-gray-300 rounded bg-white text-black"
+                                    className="w-3/4 p-1 text-sm border-gray-300 rounded bg-white text-black"
                                 >
                                     <option value="">Seleccione una subcaracterística</option>
                                     {subcaracteristicas.map((subcaracteristica) => (
@@ -148,7 +168,7 @@ const Pruebas: React.FC = () => {
                                 <select
                                     value={selectedMetrica}
                                     onChange={(e) => setSelectedMetrica(e.target.value)}
-                                    className="w-full p-2 border border-gray-300 rounded bg-white text-black"
+                                    className="w-3/4 p-1 text-sm border-gray-300 rounded bg-white text-black"
                                 >
                                     <option value="">Seleccione una métrica</option>
                                     {metricas.map((metrica) => (
@@ -165,24 +185,28 @@ const Pruebas: React.FC = () => {
                     <div className="border-l border-gray-300 mx-4"></div>
 
                     {/* Fase 3: Botones */}
-                    <div className="w-1/2 pl-4 flex flex-col justify-center">
-                        <h3 className="text-xl font-semibold text-blue-950 mb-4">Fase 3: Ejecución</h3>
+                    <div className="w-1/2 pl-4 flex flex-col justify-start items-center">
+                        <h3 className="text-xl font-semibold text-blue-950 mb-4">Fase 2: Ejecución de la prueba</h3>
                         <button
                             onClick={handleSubmit}
                             disabled={isSubmitDisabled()}
-                            className={`w-full mb-4 px-4 py-2 rounded ${isSubmitDisabled() ? 'bg-blue-300' : 'bg-blue-950'} text-white`}
+                            className={`w-auto mb-4 px-2 py-1 rounded ${isSubmitDisabled() ? 'bg-blue-500' : 'bg-blue-950'} text-white`}
                         >
-                            Realizar Pruebas
+                            Iniciar la prueba
                         </button>
                         {error && <p className="text-red-500 text-center mb-4">{error}</p>}
-                        <button
-                            onClick={handleViewResponses}
-                            className="w-full px-4 py-2 bg-green-600 text-white rounded"
-                        >
-                            Ver Respuestas
-                        </button>
+
                     </div>
                 </div>
+                <hr className="border-t-4 border-gray-300 my-6" />
+
+
+                <button
+                    onClick={handleViewResponses}
+                    className="w-auto mb-4 px-2 py-1 bg-green-600 text-white rounded"
+                >
+                    Informes de pruebas
+                </button>
             </div>
         </div>
     );
